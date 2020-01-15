@@ -1,5 +1,4 @@
 .idea/
 *.DS_Store
 *Thumbs.db
-.ipynb_checkpoints
-.gitignore (END)
+*.ipynb_checkpoints
