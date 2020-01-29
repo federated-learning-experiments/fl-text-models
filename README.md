@@ -1,5 +1,5 @@
 # fl-text-models
-Federated learning with pretrained text DNNs for DATA590 at University of Washington.
+Federated learning with text DNNs for DATA590 at University of Washington.
 
 **References:**
 - Tensorflow Federated API: https://github.com/tensorflow/federated
