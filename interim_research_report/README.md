@@ -6,10 +6,10 @@
 - Special thanks to Keith Rush and Peter Kairouz from Google for their guidance throughout the course of this project.  
 
 ### Motivation
-While machine learning on large datasets is the dominant paradigm in the field, there are a number of drawbacks to centrally aggregating data, namely privacy.  Federated Learning aims to address this and has shown promise for text completion tasks on mobile devices. The [Tensorflow Federated API](https://github.com/tensorflow/federated) provides methods to train Federated models and conduct Federated Learning experiments on data grouped by clients but never aggregated.  Through our research partnership with Google, we aim to build on the existing body of Federated Learning experiments with a particular focus on enhancing text models for Natural Language Understanding tasks, such as Next Word Prediction.
+While machine learning on large datasets is the dominant paradigm in the field, there are a number of drawbacks to centrally aggregating data, namely privacy.  Federated learning aims to address this and has shown promise for text completion tasks on mobile devices. The [Tensorflow Federated API](https://github.com/tensorflow/federated) provides methods to train federated models and conduct federated learning experiments on data grouped by clients but never aggregated.  Through our research partnership with Google, we aim to build on the existing body of federated learning experiments with a particular focus on enhancing text models for natural language understanding tasks, such as next word prediction.
 
 ### Problem Statement
-Federated Learning aims to train machine learning models in a distributed fashion without centralizing data but instead updating and passing model parameters from a central server to distributed entities and back to perform stochastic gradient descent.  McMahan et al. propose the Federated Averaging algorithm in ["Communication-Efficient Learning of Deep Networks from Decentralized Data."](https://arxiv.org/pdf/1602.05629.pdf)  Our goal is to replicate the existing network architectures for Federated Averaging, stress testing their limits within our simulated environment. We then aim to apply pretraining and pretrained model layers to measure the impact of starting with learned model weights compared to random initialization for the task of Next Word Prediction on Stack Overflow.  Specifically, in this interim delivery, we measure the effect of using pretrained embeddings on the number of training rounds required to achieve a fixed level of accuracy.
+Federated Learning aims to train machine learning models in a distributed fashion without centralizing data but instead updating and passing model parameters from a central server to distributed entities and back to perform stochastic gradient descent.  McMahan et al. propose the Federated Averaging algorithm in ["Communication-Efficient Learning of Deep Networks from Decentralized Data."](https://arxiv.org/pdf/1602.05629.pdf)  Our goal is to replicate the existing network architectures for Federated Averaging, stress testing their limits within our simulated environment. We then aim to apply pretraining and pretrained model layers to measure the impact of starting with learned model weights compared to random initialization for the task of next word prediction on Stack Overflow.  Specifically, in this interim delivery, we measure the effect of using pretrained embeddings on the number of training rounds required to achieve a fixed level of accuracy.
 
 ### Data
 The main dataset used for these experiments is hosted by Kaggle and made available through the [tff.simulation.datasets module in the Tensorflow Federated API](https://www.tensorflow.org/federated/api_docs/python/tff/simulation/datasets/stackoverflow/load_data).  Stack Overflow owns the data and has released the data under the [CC BY-SA 3.0 license](https://creativecommons.org/licenses/by-sa/3.0/).  The Stack Overflow data contains the full body text of all Stack Overflow questions and answers along with metadata, and the API pointer is updated quarterly.  The data is split into the following sets at the time of writing:
@@ -24,11 +24,11 @@ The [EDA notebook linked here](https://github.com/federated-learning-experiments
 - The distribution of words.  As is common with text data, the most common words occur with frequency far greater than the least common words (see [Zipf's Law](https://en.wikipedia.org/wiki/Zipf%27s_law)).  Therefore, in our experiments, we limit the vocab size to exclude very rare words, accepting that even state of the art language models fail at next word prediction when the next word is rare.
 
 ### Model Design
-For this interim delivery, we train two neural networks with four layers each and compare train and validation accuracy at each training round for 500 training rounds by sampling 10 training client datasets per round, each with 5000 non-IID text samples from Stack Overflow at maximum, and a total of 10000 validation text samples.  Each of the two models are trained with the Federated Averaging Algorithm as in [McMahan et. al.](https://arxiv.org/pdf/1602.05629.pdf)  The model architecure is as follows:
+For this interim delivery, we train two neural networks with four layers each and compare train and validation accuracy at each training round for 500 training rounds by sampling 10 training client datasets per round, each with 5,000 non-IID text samples from Stack Overflow at maximum, and a total of 10,000 validation text samples.  Each of the two models are trained with the Federated Averaging algorithm as in [McMahan et. al.](https://arxiv.org/pdf/1602.05629.pdf)  The model architecure is as follows:
 
 ![](images/network.png)
 
-Note in the above that one network starts with a randomly initialized embedding layer while the other starts with [pretrained GloVe embeddings](https://nlp.stanford.edu/projects/glove/) trained on the Wikipedia2015 + Gigaword5 text corpus.  A majority but not all of the words in the Stack Overflow vocabulary have corresponding GloVe embeddings.  For this reason, we set this layer to trainable to learn embeddings for words without GloVe representations and fine tune embeddings with existing representations.
+Note in the above that one network starts with a randomly initialized embedding layer while the other starts with [pretrained GloVe embeddings](https://nlp.stanford.edu/projects/glove/) trained on the Wikipedia2015 + Gigaword5 text corpus.  A majority but not all of the words in the Stack Overflow vocabulary have corresponding GloVe embeddings.  For this reason, we set this layer to trainable to learn embeddings for words without GloVe representations (~10%) and fine tune embeddings with existing representations.
 
 ### Results
 With the model design for the two networks fixed with the exception of the starting embedding layers, we train the model using the Adam optimizer and Sparse Categorical Crossentropy loss, measuring accuracy including out of vocab and end of sentence tokens after each training round on both the sampled training client datasets and the fixed validation set. Note that epochs and training rounds are equivalent as we apply federated averaging after each round as opposed to applying optimization steps on each client dataset for multiple epochs in between training rounds.
@@ -55,8 +55,8 @@ January:
 
 February:
 
-- Identify main contributions from reducing LSTM size for Federated Averaging and finalize experiments with these methods
-- Create a Transformer model with Federated Averaging
+- Identify main contributions from reducing LSTM size for federated averaging and finalize experiments with these methods
+- Create a Transformer model with federated averaging
 - Assess viability of BERT and ALBERT for federated fine tuning
 
 March:
@@ -73,13 +73,13 @@ January:
 
 February:
 
-- Identify main contributions from reducing LSTM size for Federated Averaging and finalize experiments with these methods
+- Identify main contributions from reducing LSTM size for federated averaging and finalize experiments with these methods
 - Create an LSTM model with pretrained embeddings and compare to randomly initialized embeddings
 - Pretrain an LSTM model from scratch on a different data souce then fine tune in the federated context, comparing to federated training of an LSTM model with pretrained embeddings as well as one with randomly initialized embeddings
 
 March:
 
-- Test pretraining/extracting model weights from SOTA word-level models then fine tuning in the federated context
+- Test pretraining/extracting model weights from SOTA word-level models with fine tuning in the federated context
 - Compile experimental results
 - Create project deliverables
 - March 11, 2020 final presentation
