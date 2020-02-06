@@ -18,7 +18,7 @@ The main dataset used for these experiments is hosted by Kaggle and made availab
 - Validation: 38,758 distinct users and 16,491,230 examples.
 - Test: 204,088 distinct users and 16,586,035 examples.
 
-The [EDA notebook linked here](https://github.com/federated-learning-experiments/fl-text-models/blob/master/local_gpu_training/eda/stack_overflow_eda.ipynb) contains an exploratory analysis of the data with example records and visualizations.  From this notebook we deduce that challenges with the data include:
+The [EDA notebook linked here](https://github.com/federated-learning-experiments/fl-text-models/blob/master/eda/stack_overflow_eda.ipynb) contains an exploratory analysis of the data with example records and visualizations.  From this notebook we deduce that challenges with the data include:
 
 - The size of the data, as it would be nearly impossible to inspect all samples.
 - The distribution of words.  As is common with text data, the most common words occur with frequency far greater than the least common words (see [Zipf's Law](https://en.wikipedia.org/wiki/Zipf%27s_law)).  Therefore, in our experiments, we limit the vocab size to exclude very rare words, accepting that even state of the art language models fail at next word prediction when the next word is rare.
