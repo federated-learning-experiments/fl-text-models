@@ -1,6 +1,10 @@
+import tensorflow_federated as tff
+
+import metrics
+from model import build_model, compile_model
 
 def get_metrics():
-    
+
     evaluation_metrics = [
         metrics.NumTokensCounter(name='num_tokens', masked_tokens=[pad]),
         metrics.NumTokensCounter(name='num_tokens_no_oov', masked_tokens=[pad, oov]),
@@ -10,37 +14,40 @@ def get_metrics():
         metrics.MaskedCategoricalAccuracy(name='accuracy_no_oov', masked_tokens=[pad, oov]),
         metrics.MaskedCategoricalAccuracy(name='accuracy_no_oov_no_eos', masked_tokens=[pad, oov, eos])
     ]
-    
+
     return evaluation_metrics
 
-def keras_evaluate(state, val_dataset, use_pretrained_embedding=False):
-    
-    keras_model = build_model(use_pretrained_embedding=use_pretrained_embedding)
+def keras_evaluate(state, val_dataset, vocab_size,
+                   embedding_dim,
+                   embedding_matrix,
+                   rnn_units,
+                   metrics_tracker):
+
+    keras_model = build_model(vocab_size,
+                    embedding_dim,
+                    embedding_matrix,
+                    rnn_units)
     evaluation_metrics = get_metrics()
-    
+
     compile_model(keras_model, evaluation_metrics)
     tff.learning.assign_weights_to_keras_model(keras_model, state.model)
-    
+
     evaluation_results = keras_model.evaluate(val_dataset)
-    
-    if use_pretrained_embedding:
-        for i, result in enumerate(evaluation_results):
-            val_metrics_tracker_with_embedding.add_metrics_by_name(val_metrics_tracker_with_embedding.metric_names[i], result)
-    else:
-        for i, result in enumerate(evaluation_results):
-            val_metrics_tracker.add_metrics_by_name(val_metrics_tracker.metric_names[i], result)
+
+    for i, result in enumerate(evaluation_results):
+        metrics_tracker.add_metrics_by_name(metrics_tracker.metric_names[i], result)
 
 class model_history_tracker:
-    
+
     def __init__(self, metric_names=[]):
-        
+
         self.metric_names = metric_names
         self.metrics_dict = {name:[] for name in metric_names}
-    
+
     def get_metrics_by_name(self, metric_name):
-        
+
         return self.metrics_dict[metric_name]
-    
+
     def add_metrics_by_name(self, metric_name, metric_result):
-        
-        self.metrics_dict[metric_name].append(metric_result)            
+
+        self.metrics_dict[metric_name].append(metric_result)
