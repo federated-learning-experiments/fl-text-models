@@ -1,9 +1,15 @@
 import tensorflow_federated as tff
 
-import metrics
-from model import build_model, compile_model
+import os, sys
+sys.path.append(os.getcwd())
 
-def get_metrics():
+import src.dataset as dataset
+import src.metrics as metrics
+import src.model as model
+
+def get_metrics(vocab_size):
+
+    pad, oov, bos, eos = get_special_tokens(vocab_size)
 
     evaluation_metrics = [
         metrics.NumTokensCounter(name='num_tokens', masked_tokens=[pad]),
@@ -17,19 +23,23 @@ def get_metrics():
 
     return evaluation_metrics
 
-def keras_evaluate(state, val_dataset, vocab_size,
+def keras_evaluate(state,
+                   val_dataset,
+                   extended_vocab_size,
+                   vocab_size,
                    embedding_dim,
                    embedding_matrix,
                    rnn_units,
                    metrics_tracker):
 
-    keras_model = build_model(vocab_size,
-                    embedding_dim,
-                    embedding_matrix,
-                    rnn_units)
-    evaluation_metrics = get_metrics()
+    keras_model = model.build_model(extended_vocab_size,
+                              embedding_dim,
+                              embedding_matrix,
+                              rnn_units)
 
-    compile_model(keras_model, evaluation_metrics)
+    evaluation_metrics = get_metrics(vocab_size)
+
+    model.compile_model(keras_model, evaluation_metrics)
     tff.learning.assign_weights_to_keras_model(keras_model, state.model)
 
     evaluation_results = keras_model.evaluate(val_dataset)

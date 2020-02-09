@@ -1,9 +1,12 @@
 import tensorflow as tf
 import tensorflow_federated as tff
 
-from validation import get_metrics
+import os, sys
+sys.path.append(os.getcwd())
 
-def build_model(vocab_size,
+import src.validation as validation
+
+def build_model(extended_vocab_size,
                 embedding_dim,
                 embedding_matrix,
                 rnn_units):
@@ -14,7 +17,7 @@ def build_model(vocab_size,
     model1_input = tf.keras.Input(shape=(None, ),
                                   name='model1_input')
 
-    model1_embedding = tf.keras.layers.Embedding(input_dim=vocab_size,
+    model1_embedding = tf.keras.layers.Embedding(input_dim=extended_vocab_size,
                                                  output_dim=embedding_dim,
                                                  embeddings_initializer=embedding_matrix,
                                                  mask_zero=True,
@@ -28,7 +31,7 @@ def build_model(vocab_size,
 
     model1_dense1 = tf.keras.layers.Dense(units=embedding_dim)(model1_lstm)
 
-    model1_dense2 = tf.keras.layers.Dense(units=vocab_size)(model1_dense1)
+    model1_dense2 = tf.keras.layers.Dense(units=extended_vocab_size)(model1_dense1)
 
     final_model = tf.keras.Model(inputs=model1_input, outputs=model1_dense2)
 
@@ -43,21 +46,22 @@ def compile_model(keras_model, evaluation_metrics):
 
     return keras_model
 
-def model_fn(vocab_size,
+def model_fn(extended_vocab_size,
              embedding_dim,
              embedding_matrix,
              rnn_units,
+             vocab_size,
              sample_batch):
     """
     Create TFF model from compiled Keras model and a sample batch.
     """
 
-    keras_model = build_model(vocab_size,
+    keras_model = build_model(extended_vocab_size,
                               embedding_dim,
                               embedding_matrix,
                               rnn_units)
 
-    evaluation_metrics = get_metrics()
+    evaluation_metrics = validation.get_metrics(vocab_size)
 
     compile_model(keras_model, evaluation_metrics)
 

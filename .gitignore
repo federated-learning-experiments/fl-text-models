@@ -3,3 +3,5 @@
 *Thumbs.db
 *.ipynb_checkpoints
 word_embeddings/
+*__pycache__/
+*README.html
