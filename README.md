@@ -1,5 +1,5 @@
 # fl-text-models
-Federated learning with text DNNs for DATA590 at University of Washington.  See the `README.md` files in **`interim_research_report`** and **`final_research_report`** for overviews of experiment designs and results.
+Federated learning with text DNNs for DATA 591 at University of Washington.  See the `README.md` files in **`interim_research_report`** and **`final_research_report`** for overviews of experiment designs and results.
 
 ##### Data
 The main dataset used for these experiments is hosted by Kaggle and made available through the [tff.simulation.datasets module in the Tensorflow Federated API](https://www.tensorflow.org/federated/api_docs/python/tff/simulation/datasets/stackoverflow/load_data).  Stack Overflow owns the data and has released the data under the [CC BY-SA 3.0 license](https://creativecommons.org/licenses/by-sa/3.0/).
