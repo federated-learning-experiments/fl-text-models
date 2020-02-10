@@ -4,4 +4,6 @@
 *.ipynb_checkpoints
 word_embeddings/
 *__pycache__/
+*/__pycache__
 *README.html
+*.pyc

@@ -1,11 +1,11 @@
 import numpy as np
 import tensorflow as tf
 
-def client_weight_fn(local_outputs, uniform_weighting):
+def client_weight_fn(local_outputs):
 
     num_tokens = tf.cast(tf.squeeze(local_outputs['num_tokens']), tf.float32)
 
-    return 1.0 if uniform_weighting else num_tokens
+    return num_tokens # return 1.0 for uniform weighting
 
 def server_optimizer_fn():
 
