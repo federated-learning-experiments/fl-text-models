@@ -8,8 +8,8 @@ import src.metrics as metrics
 import src.model as model
 
 def get_metrics(vocab_size):
-
-    pad, oov, bos, eos = get_special_tokens(vocab_size)
+    
+    pad, oov, bos, eos = dataset.get_special_tokens(vocab_size)
 
     evaluation_metrics = [
         metrics.NumTokensCounter(name='num_tokens', masked_tokens=[pad]),

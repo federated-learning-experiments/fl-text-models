@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-def generate_text(model, start_string):
+def generate_text(model, word2idx, idx2word, start_string):
     """
     Generate text by sampling from the model output distribution
     as in From https://www.tensorflow.org/tutorials/sequences/text_generation.
