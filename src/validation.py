@@ -3,12 +3,10 @@ import tensorflow_federated as tff
 import os, sys
 sys.path.append(os.getcwd())
 
-import src.dataset as dataset
-import src.metrics as metrics
-import src.model as model
+from . import dataset, metrics, model
 
 def get_metrics(vocab_size):
-    
+
     pad, oov, bos, eos = dataset.get_special_tokens(vocab_size)
 
     evaluation_metrics = [

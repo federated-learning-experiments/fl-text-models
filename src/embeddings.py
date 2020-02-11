@@ -61,7 +61,7 @@ def create_matrix_from_pretrained_embeddings(embedding_path,
         else:
             embedding_matrix[i] = embedding_vector
 
-    warnings.warn(f'Words from dataset with no embedding: {missing_words}')
+    warnings.warn('Words from dataset with no embedding: {}'.format(missing_words))
     embedding_matrix = tf.keras.initializers.Constant(embedding_matrix)
 
     return embedding_matrix

@@ -4,7 +4,7 @@ import tensorflow_federated as tff
 import os, sys
 sys.path.append(os.getcwd())
 
-import src.validation as validation
+from . import validation
 
 def build_model(extended_vocab_size,
                 embedding_dim,
