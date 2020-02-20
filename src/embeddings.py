@@ -3,7 +3,9 @@ import warnings
 import numpy as np
 import tensorflow as tf
 
-from pytorch_transformers import GPT2Tokenizer, GPT2LMHeadModel
+from transformers import GPT2Tokenizer, GPT2LMHeadModel
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 
 def load_embeddings(embedding_path):
 
@@ -69,6 +71,17 @@ def create_matrix_from_pretrained_embeddings(embedding_path,
     return embedding_matrix
 
 def create_gpt_embeddings(word2idx):
+    """
+    Code modified from: https://github.com/huggingface/transformers/issues/1458.
+    Here we extract the word embeddings from the gpt model in the huggingface
+    transformers library and return the embedding index dict.
+
+    Args:
+      word2idx: `dict` mapping word strings to integer indices.
+
+    Returns:
+      embedding_index: `dict` of vocab strings and embedding `numpy.array()`.
+    """
 
     model = GPT2LMHeadModel.from_pretrained('gpt2')
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
@@ -77,9 +90,37 @@ def create_gpt_embeddings(word2idx):
 
     for word, _ in word2idx.items():
         text_index = tokenizer.encode(word)
-        print(type_text_index)
+        print(type(text_index))
         vector = model.transformer.wte.weight[text_index,:]
         print(type(vector))
         embedding_index[word] = vector[0].detach().numpy()
 
     return embedding_index
+
+def to_principle_components(embedding_index, n):
+    """
+    Takes an embedding index dictionary with numpy arrays as keys
+    and applys PCA to the key vectors returning a new embedding
+    index dictionary with the top n principle components.
+    """
+
+    words, vectors = [], []
+    for word, vector in embedding_index:
+        words.append(word)
+        vectors.append(vector)
+
+    X = np.array(vectors)
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    pca = PCA(n_components=n)
+    X_projected = pca.fit_transform(X_scaled)
+
+
+
+
+if __name__ == '__main__':
+
+    word2idx = {'hello': 0, 'my': 1, 'darling': 2, 'gobdobdob': 3}
+    embedding_index = create_gpt_embeddings(word2idx)
+    print(embedding_index)

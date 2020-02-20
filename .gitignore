@@ -1,9 +1,8 @@
 .idea/
-*.DS_Store
-*Thumbs.db
-*.ipynb_checkpoints
+**.DS_Store
+**Thumbs.db
+**.ipynb_checkpoints
 word_embeddings/
-*__pycache__/
-*/__pycache__
-*README.html
-*.pyc
+**__pycache__
+**README.html
+**.pyc
