@@ -1,10 +1,13 @@
-import warnings
+import os, sys
+sys.path.append(os.getcwd())
 
+from . import dataset
+
+import warnings
 import numpy as np
 import tensorflow as tf
 
-from transformers import GPT2Tokenizer, GPT2LMHeadModel
-from sklearn.preprocessing import StandardScaler
+from pytorch_transformers import GPT2Tokenizer, GPT2LMHeadModel
 from sklearn.decomposition import PCA
 
 def load_embeddings(embedding_path):
@@ -17,19 +20,19 @@ def load_embeddings(embedding_path):
       embedding_path: `str` location of embedding file.
 
     Returns:
-      embedding_index: `dict` of vocab strings and embedding `numpy.array()`.
+      word2embedding: `dict` of vocab strings and embeddings `numpy.array()`.
     """
 
-    embedding_index = {}
+    word2embedding = {}
     with open(embedding_path, 'r') as f:
         for line in f:
             word, coefs = line.split(maxsplit=1)
             coefs = np.fromstring(coefs, 'f', sep=' ')
-            embedding_index[word] = coefs
+            word2embedding[word] = coefs
 
-    return embedding_index
+    return word2embedding
 
-def create_matrix_from_pretrained_embeddings(embedding_path,
+def create_matrix_from_pretrained_embeddings(word2embedding,
                                              embedding_dim,
                                              word2idx):
 
@@ -38,10 +41,12 @@ def create_matrix_from_pretrained_embeddings(embedding_path,
     Here we initialize the embedding matrix to random uniform values according
     to the random uniform initializer in tf.keras used by tf.keras.layers.Embedding.
     This way any words without embeddings are mapped according to this random
-    distribution and can then be learned.
+    distribution and can be learned.  Similarly, special token words from
+    `dataset.py` are mapped to random values to be learned and not mapped to
+    word embeddings in case embeddings exist for words like 'pad'.
 
     Args:
-      embedding_path: `str` location of embedding file.
+      word2embedding: `dict` of vocab strings and embeddings `numpy.array()`.
       embedding_dim: size of each word embedding as `int`.
       word2idx: `dict` mapping word strings to integer indices.
 
@@ -50,7 +55,7 @@ def create_matrix_from_pretrained_embeddings(embedding_path,
         to be passed to `tf.keras.layers.Embedding`.
     """
 
-    embedding_index = load_embeddings(embedding_path)
+    special_token_words = list(dataset.get_special_token_words())
 
     em_init_params = tf.random_uniform_initializer().get_config()
     embedding_matrix = np.random.uniform(low=em_init_params['minval'],
@@ -59,14 +64,14 @@ def create_matrix_from_pretrained_embeddings(embedding_path,
 
     missing_words = 0
     for word, i in word2idx.items():
-        embedding_vector = embedding_index.get(word)
-        if embedding_vector is None:
+        vector = word2embedding.get(word)
+        if (vector is None) or (word in special_token_words):
             missing_words += 1
         else:
-            embedding_matrix[i] = embedding_vector
+            embedding_matrix[i] = vector
 
     warnings.warn('Words from dataset with no embedding: {}'.format(missing_words))
-    embedding_matrix = tf.keras.initializers.Constant(embedding_matrix)
+    #embedding_matrix = tf.keras.initializers.Constant(embedding_matrix)
 
     return embedding_matrix
 
@@ -80,47 +85,48 @@ def create_gpt_embeddings(word2idx):
       word2idx: `dict` mapping word strings to integer indices.
 
     Returns:
-      embedding_index: `dict` of vocab strings and embedding `numpy.array()`.
+      word2embedding: `dict` of vocab strings and embeddings `numpy.array()`.
     """
 
     model = GPT2LMHeadModel.from_pretrained('gpt2')
     tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
 
-    embedding_index = {}
+    word2embedding = {}
 
     for word, _ in word2idx.items():
         text_index = tokenizer.encode(word)
-        print(type(text_index))
         vector = model.transformer.wte.weight[text_index,:]
-        print(type(vector))
-        embedding_index[word] = vector[0].detach().numpy()
+        word2embedding[word] = vector[0].detach().numpy()
 
-    return embedding_index
+    return word2embedding
 
-def to_principle_components(embedding_index, n):
+def to_pca_projections(word2embedding, n):
     """
     Takes an embedding index dictionary with numpy arrays as keys
     and applys PCA to the key vectors returning a new embedding
-    index dictionary with the top n principle components.
+    index dictionary based on the top n principle components.
+
+    Args:
+      word2embedding: `dict` of vocab strings and embeddings `numpy.array()`.
+      n: int representing number of principle components to use for projection
+
+    Returns:
+      word2embedding: `dict` of vocab strings and embeddings `numpy.array()`.
     """
 
     words, vectors = [], []
-    for word, vector in embedding_index:
+    for word, vector in word2embedding.items():
         words.append(word)
         vectors.append(vector)
 
     X = np.array(vectors)
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+    X_scaled = X - X.mean(axis=0)
 
     pca = PCA(n_components=n)
     X_projected = pca.fit_transform(X_scaled)
 
+    word2embedding = {}
+    for i, vector in enumerate(X_projected):
+        word2embedding[words[i]] = vector
 
-
-
-if __name__ == '__main__':
-
-    word2idx = {'hello': 0, 'my': 1, 'darling': 2, 'gobdobdob': 3}
-    embedding_index = create_gpt_embeddings(word2idx)
-    print(embedding_index)
+    return word2embedding

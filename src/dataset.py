@@ -78,7 +78,7 @@ def construct_word_level_datasets(
     shuffle_buffer_size,
     num_validation_examples,
     num_test_examples):
-    
+
   """Preprocessing for Stackoverflow data.
 
   Notice that this preprocessing function *ignores* the heldout Stackoverflow
@@ -221,3 +221,23 @@ def get_special_tokens(vocab_size):
   eos = vocab_size + 3
 
   return pad, oov, bos, eos
+
+def get_special_token_words():
+  """
+  Gets the word representations
+  of the four special tokens.
+
+  The four special tokens are:
+    pad: padding token
+    oov: out of vocabulary
+    bos: begin of sentence
+    eos: end of sentence
+
+  Args:
+    None.
+
+  Returns:
+    The four-tuple ('pad', 'oov', 'bos', 'eos').
+  """
+
+  return 'pad', 'oov', 'bos', 'eos'
