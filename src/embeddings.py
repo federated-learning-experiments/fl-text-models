@@ -10,8 +10,13 @@ import tensorflow as tf
 from pytorch_transformers import GPT2Tokenizer, GPT2LMHeadModel
 from sklearn.decomposition import PCA
 
-def load_embeddings(embedding_path):
+class missing_words_warning(UserWarning):
+    """
+    Warning regarding words missing from word to embedding mapping.
+    """
+    pass
 
+def load_embeddings(embedding_path):
     """
     Loads word embeddings.
     Code modified from: https://keras.io/examples/pretrained_word_embeddings/.
@@ -60,20 +65,20 @@ def create_matrix_from_pretrained_embeddings(word2embedding,
     em_init_params = tf.random_uniform_initializer().get_config()
     embedding_matrix = np.random.uniform(low=em_init_params['minval'],
                                          high=em_init_params['maxval'],
-                                         size=(len(word2idx)+1, embedding_dim))
+                                         size=(len(word2idx), embedding_dim))
 
-    missing_words = 0
+    missing = 0
     for word, i in word2idx.items():
         vector = word2embedding.get(word)
         if (vector is None) or (word in special_token_words):
-            missing_words += 1
+            missing += 1
         else:
             embedding_matrix[i] = vector
 
-    warnings.warn('Words from dataset with no embedding: {}'.format(missing_words))
-    #embedding_matrix = tf.keras.initializers.Constant(embedding_matrix)
+    warnings.warn('{} words set to default random initialization'\
+            .format(missing), missing_words_warning)
 
-    return embedding_matrix
+    return tf.keras.initializers.Constant(embedding_matrix)
 
 def create_gpt_embeddings(word2idx):
     """
