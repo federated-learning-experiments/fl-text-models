@@ -3,6 +3,8 @@ import warnings
 import numpy as np
 import tensorflow as tf
 
+from pytorch_transformers import GPT2Tokenizer, GPT2LMHeadModel
+
 def load_embeddings(embedding_path):
 
     """
@@ -65,3 +67,19 @@ def create_matrix_from_pretrained_embeddings(embedding_path,
     embedding_matrix = tf.keras.initializers.Constant(embedding_matrix)
 
     return embedding_matrix
+
+def create_gpt_embeddings(word2idx):
+
+    model = GPT2LMHeadModel.from_pretrained('gpt2')
+    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+
+    embedding_index = {}
+
+    for word, _ in word2idx.items():
+        text_index = tokenizer.encode(word)
+        print(type_text_index)
+        vector = model.transformer.wte.weight[text_index,:]
+        print(type(vector))
+        embedding_index[word] = vector[0].detach().numpy()
+
+    return embedding_index
