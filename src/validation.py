@@ -7,7 +7,7 @@ from . import dataset, metrics, model
 
 def get_metrics(vocab_size):
 
-    pad, oov, bos, eos = dataset.get_special_tokens(vocab_size)
+    pad, oov, _, eos = dataset.get_special_tokens(vocab_size)
 
     evaluation_metrics = [
         metrics.NumTokensCounter(name='num_tokens', masked_tokens=[pad]),
@@ -31,9 +31,9 @@ def keras_evaluate(state,
                    metrics_tracker):
 
     keras_model = model.build_model(extended_vocab_size,
-                              embedding_dim,
-                              embedding_matrix,
-                              rnn_units)
+                                    embedding_dim,
+                                    embedding_matrix,
+                                    rnn_units)
 
     evaluation_metrics = get_metrics(vocab_size)
 

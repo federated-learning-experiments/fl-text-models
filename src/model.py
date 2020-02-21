@@ -11,7 +11,8 @@ def build_model(extended_vocab_size,
                 embedding_matrix,
                 rnn_units):
     """
-    Build model with architecture from: https://www.tensorflow.org/tutorials/text/text_generation.
+    Build model with architecture
+    from: https://www.tensorflow.org/tutorials/text/text_generation.
     """
 
     model1_input = tf.keras.Input(shape=(None, ),
@@ -38,6 +39,10 @@ def build_model(extended_vocab_size,
     return final_model
 
 def compile_model(keras_model, evaluation_metrics):
+    """
+    Compile a given keras model using SparseCategoricalCrossentropy
+    loss and the Adam optimizer with set evaluation metrics.
+    """
 
     keras_model.compile(
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
