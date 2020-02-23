@@ -28,12 +28,17 @@ def keras_evaluate(state,
                    embedding_dim,
                    embedding_matrix,
                    rnn_units,
-                   metrics_tracker):
+                   metrics_tracker,
+                   stacked_lstm=False,
+                   rnn_units_2=None):
 
     keras_model = model.build_model(extended_vocab_size,
-                                    embedding_dim,
-                                    embedding_matrix,
-                                    rnn_units)
+                              embedding_dim,
+                              embedding_matrix,
+                              rnn_units,
+                              stacked_lstm=stacked_lstm,
+                              rnn_units_2=rnn_units_2
+                              )
 
     evaluation_metrics = get_metrics(vocab_size)
 

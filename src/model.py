@@ -14,7 +14,6 @@ def build_model(extended_vocab_size,
     Build model with architecture
     from: https://www.tensorflow.org/tutorials/text/text_generation.
     """
-
     model1_input = tf.keras.Input(shape=(None, ),
                                   name='model1_input')
 
@@ -29,8 +28,16 @@ def build_model(extended_vocab_size,
                                        return_sequences=True,
                                        recurrent_initializer='glorot_uniform',
                                        name='model1_lstm')(model1_embedding)
+    if stacked_lstm:
+        model2_lstm = tf.keras.layers.LSTM(units=rnn_units_2,
+                                           return_sequences=True,
+                                           recurrent_initializer='glorot_uniform',
+                                           name='model2_lstm')(model1_lstm)
+        model_lstm = model2_lstm
+    else:
+        model_lstm = model1_lstm
 
-    model1_dense1 = tf.keras.layers.Dense(units=embedding_dim)(model1_lstm)
+    model1_dense1 = tf.keras.layers.Dense(units=embedding_dim)(model_lstm)
 
     model1_dense2 = tf.keras.layers.Dense(units=extended_vocab_size)(model1_dense1)
 
@@ -56,7 +63,9 @@ def model_fn(extended_vocab_size,
              embedding_matrix,
              rnn_units,
              vocab_size,
-             sample_batch):
+             sample_batch,
+             stacked_lstm=False,
+             rnn_units_2=None):
     """
     Create TFF model from compiled Keras model and a sample batch.
     """
@@ -64,7 +73,9 @@ def model_fn(extended_vocab_size,
     keras_model = build_model(extended_vocab_size,
                               embedding_dim,
                               embedding_matrix,
-                              rnn_units)
+                              rnn_units,
+                              stacked_lstm=stacked_lstm,
+                              rnn_units_2=rnn_units_2)
 
     evaluation_metrics = validation.get_metrics(vocab_size)
 
