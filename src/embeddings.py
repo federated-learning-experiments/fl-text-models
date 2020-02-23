@@ -33,7 +33,8 @@ def load_embeddings(embedding_path):
         for line in f:
             word, coefs = line.split(maxsplit=1)
             coefs = np.fromstring(coefs, 'f', sep=' ')
-            word2embedding[word] = coefs
+            if coefs.shape[0] > 1:
+                word2embedding[word] = coefs
 
     return word2embedding
 
@@ -50,7 +51,7 @@ def create_matrix_from_pretrained_embeddings(word2embedding,
     Args:
       word2embedding: `dict` of words and embeddings `numpy.array()`.
       embedding_dim: size of each word embedding as `int`.
-      vocab: `list` of words in vocab
+      vocab: `list` of words in vocab.
 
     Returns:
       embedding_matrix: matrix of type `tf.keras.initializers.Constant`
@@ -87,7 +88,7 @@ def create_gpt_embeddings(vocab):
     transformers library and return the embedding index dict.
 
     Args:
-      vocab: `list` of words in vocab
+      vocab: `list` of words in vocab.
 
     Returns:
       word2embedding: `dict` of words and embeddings `numpy.array()`.
@@ -106,27 +107,47 @@ def create_gpt_embeddings(vocab):
 
     return word2embedding
 
-def to_pca_projections(word2embedding, n):
+def to_vocab_words_and_vectors(word2embedding, vocab):
     """
-    Takes an embedding index dictionary with numpy arrays as keys
-    and applys PCA to the key vectors returning a new embedding
-    index dictionary based on the top n principle components.
+    Takes a dictionary of words and vectors along with a vocabulary
+    list and returns the words and vectors in the vocabulary
+    as a (words, vectors) tuple.
 
     Args:
       word2embedding: `dict` of words and embeddings `numpy.array()`.
-      n: int representing number of principle components to use for projection
+      vocab: `list` of words in vocab.
+
+    Returns:
+      words, vectors: tuple with elements of type `list`.
+    """
+
+    w2e_in_vocab = {w:v for w, v in word2embedding.items() if w in vocab}
+
+    words, vectors = [], []
+    for word, vector in w2e_in_vocab.items():
+        words.append(word)
+        vectors.append(vector)
+
+    return words, vectors
+
+def to_pca_projections(word2embedding, vocab, n):
+    """
+    Takes a dictionary of words and vectors along with a vocabulary
+    list and applys PCA to the in vocab word vectors returning a new embedding
+    word embedding dictionary based on the top n principle components.
+
+    Args:
+      word2embedding: `dict` of words and embeddings `numpy.array()`.
+      vocab: `list` of words in vocab.
+      n: `int` representing number of principle components to use for projection.
 
     Returns:
       word2embedding: `dict` of words and embeddings `numpy.array()`.
     """
 
-    words, vectors = [], []
-    for word, vector in word2embedding.items():
-        words.append(word)
-        vectors.append(vector)
-
+    _, vectors = to_vocab_words_and_vectors(word2embedding, vocab)
     X = np.array(vectors)
-    X_train = X - X.mean(axis=0)
+    X_train = X - np.mean(X, axis=0)
 
     pca = PCA(n_components=n)
     X_projected = pca.fit_transform(X_train)
@@ -137,42 +158,57 @@ def to_pca_projections(word2embedding, n):
 
     return word2embedding
 
-def plot_pca_variance_explained(word2embedding):
+def plot_pca_variance_explained(word2embedding, vocab):
+    """
+    Takes a dictionary of words and vectors along with a vocabulary
+    list and applys PCA to the in vocab word vectors for all possible
+    numbers of components and plots the variance explained by each.
 
-    words, vectors = [], []
-    for word, vector in word2embedding.items():
-        words.append(word)
-        vectors.append(vector)
+    Args:
+      word2embedding: `dict` of words and embeddings `numpy.array()`.
+      vocab: `list` of words in vocab.
+    """
 
+    _, vectors = to_vocab_words_and_vectors(word2embedding, vocab)
     X = np.array(vectors)
-    X_train = X - X.mean(axis=0)
+    X_train = X - np.mean(X, axis=0)
 
     pca_full = PCA(n_components=min(X_train.shape[0], X_train.shape[1]))
     pca_full.fit(X_train)
 
     plt.clf()
+    fig, ax = plt.subplots(figsize=(10, 10))
     plt.plot(np.cumsum(pca_full.explained_variance_ratio_))
     plt.xlabel('Number of Components')
     plt.ylabel('Cumulative Explained Variance')
     plt.title('Variance Explained by Principal Components')
     plt.show()
 
-def to_pp_pca_pp_projections(word2embedding, n, d=7):
+def to_pp_pca_pp_projections(word2embedding, vocab, n, d=7):
     """
-    https://github.com/vyraun/Half-Size
-    https://arxiv.org/pdf/1708.03629.pdf
+    Takes a dictionary of words and vectors along with a vocabulary
+    list and applys the pre and post processing PCA algorithm from
+    Vikas Raunak's 2017 NIPS paper: https://arxiv.org/pdf/1708.03629.pdf
+    for a desired embedding dimension n and the top d dimensions parameter
+    from the paper. Implementation based on code from
+    https://github.com/vyraun/Half-Size.
+
+    Args:
+      word2embedding: `dict` of words and embeddings `numpy.array()`.
+      vocab: `list` of words in vocab.
+      n: `int` representing number of principle components to use for projection.
+      d: `int` top d dimensions parameter from the paper which used d=7.
+
+    Returns:
+      final_pca_embeddings: `dict` of words and embeddings `numpy.array()`.
     """
 
-    words, vectors = [], []
-    for word, vector in word2embedding.items():
-        words.append(word)
-        vectors.append(vector)
-
+    words, vectors = to_vocab_words_and_vectors(word2embedding, vocab)
     X = np.array(vectors)
+    X_train = X - np.mean(X, axis=0)
 
     # PCA to get Top Components
     pca =  PCA(n_components=X_train.shape[1])
-    X_train = X - X.mean(axis=0)
     X_fit = pca.fit_transform(X_train)
     U1 = pca.components_
 
@@ -183,23 +219,24 @@ def to_pp_pca_pp_projections(word2embedding, n, d=7):
             x = x - np.dot(u.transpose(), x) * u
     	z.append(x)
 
-    z = np.array(z)
-
     # PCA Dim Reduction
+    z = np.array(z)
+    X_train = z - np.mean(z, axis=0)
+
     pca =  PCA(n_components=n)
-    X_train = z - np.mean(z)
     X_new_final = pca.fit_transform(X_train)
 
     # PCA to do Post-Processing Again
+    X_new = X_new_final - np.mean(X_new_final, axis=0)
+
     pca =  PCA(n_components=n)
-    X_new = X_new_final - np.mean(X_new_final)
     X_new = pca.fit_transform(X_new)
     Ufit = pca.components_
 
-    X_new_final = X_new_final - np.mean(X_new_final)
+    X_new_final = X_new_final - np.mean(X_new_final, axis=0)
 
     final_pca_embeddings = {}
-    for i, word in enumerate(word2embedding.keys()):
+    for i, word in enumerate(words):
         final_pca_embeddings[word] = X_new_final[i]
         for u in Ufit[0:d]:
             final_pca_embeddings[word] = final_pca_embeddings[word] - np.dot(u.transpose(), final_pca_embeddings[word]) * u
