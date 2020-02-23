@@ -6,9 +6,9 @@ from . import dataset
 import warnings
 import numpy as np
 import tensorflow as tf
-
-from pytorch_transformers import GPT2Tokenizer, GPT2LMHeadModel
+import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
+from pytorch_transformers import GPT2Tokenizer, GPT2LMHeadModel
 
 class missing_words_warning(UserWarning):
     """
@@ -126,13 +126,82 @@ def to_pca_projections(word2embedding, n):
         vectors.append(vector)
 
     X = np.array(vectors)
-    X_scaled = X - X.mean(axis=0)
+    X_train = X - X.mean(axis=0)
 
     pca = PCA(n_components=n)
-    X_projected = pca.fit_transform(X_scaled)
+    X_projected = pca.fit_transform(X_train)
 
     word2embedding = {}
     for i, vector in enumerate(X_projected):
         word2embedding[words[i]] = vector
 
     return word2embedding
+
+def plot_pca_variance_explained(word2embedding):
+
+    words, vectors = [], []
+    for word, vector in word2embedding.items():
+        words.append(word)
+        vectors.append(vector)
+
+    X = np.array(vectors)
+    X_train = X - X.mean(axis=0)
+
+    pca_full = PCA(n_components=min(X_train.shape[0], X_train.shape[1]))
+    pca_full.fit(X_train)
+
+    plt.clf()
+    plt.plot(np.cumsum(pca_full.explained_variance_ratio_))
+    plt.xlabel('Number of Components')
+    plt.ylabel('Cumulative Explained Variance')
+    plt.title('Variance Explained by Principal Components')
+    plt.show()
+
+def to_pp_pca_pp_projections(word2embedding, n, d=7):
+    """
+    https://github.com/vyraun/Half-Size
+    https://arxiv.org/pdf/1708.03629.pdf
+    """
+
+    words, vectors = [], []
+    for word, vector in word2embedding.items():
+        words.append(word)
+        vectors.append(vector)
+
+    X = np.array(vectors)
+
+    # PCA to get Top Components
+    pca =  PCA(n_components=X_train.shape[1])
+    X_train = X - X.mean(axis=0)
+    X_fit = pca.fit_transform(X_train)
+    U1 = pca.components_
+
+    # Removing Projections on Top Components
+    z = []
+    for i, x in enumerate(X_train):
+    	for u in U1[0:d]:
+            x = x - np.dot(u.transpose(), x) * u
+    	z.append(x)
+
+    z = np.array(z)
+
+    # PCA Dim Reduction
+    pca =  PCA(n_components=n)
+    X_train = z - np.mean(z)
+    X_new_final = pca.fit_transform(X_train)
+
+    # PCA to do Post-Processing Again
+    pca =  PCA(n_components=n)
+    X_new = X_new_final - np.mean(X_new_final)
+    X_new = pca.fit_transform(X_new)
+    Ufit = pca.components_
+
+    X_new_final = X_new_final - np.mean(X_new_final)
+
+    final_pca_embeddings = {}
+    for i, word in enumerate(word2embedding.keys()):
+        final_pca_embeddings[word] = X_new_final[i]
+        for u in Ufit[0:d]:
+            final_pca_embeddings[word] = final_pca_embeddings[word] - np.dot(u.transpose(), final_pca_embeddings[word]) * u
+
+    return final_pca_embeddings
