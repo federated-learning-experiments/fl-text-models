@@ -9,7 +9,9 @@ from . import validation
 def build_model(extended_vocab_size,
                 embedding_dim,
                 embedding_matrix,
-                rnn_units):
+                rnn_units,
+                stacked_lstm=False,
+                rnn_units_2=None):
     """
     Build model with architecture
     from: https://www.tensorflow.org/tutorials/text/text_generation.
