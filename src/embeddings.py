@@ -145,7 +145,7 @@ def to_pca_projections(word2embedding, vocab, n):
       word2embedding: `dict` of words and embeddings `numpy.array()`.
     """
 
-    _, vectors = to_vocab_words_and_vectors(word2embedding, vocab)
+    words, vectors = to_vocab_words_and_vectors(word2embedding, vocab)
     X = np.array(vectors)
     X_train = X - np.mean(X, axis=0)
 
