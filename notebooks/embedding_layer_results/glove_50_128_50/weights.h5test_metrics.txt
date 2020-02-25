@@ -1,0 +1,8 @@
+loss, 6.4497658944129945
+num_tokens, 1337987
+num_tokens_no_oov, 1296127
+num_batches, 1000
+num_examples, 100000
+accuracy, 0.004282552748918533
+accuracy_no_oov, 0.004378429148346186
+accuracy_no_oov_no_oes, 0.004637821111828089

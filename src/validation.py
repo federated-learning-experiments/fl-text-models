@@ -33,8 +33,7 @@ def keras_evaluate(state,
                    metrics_tracker,
                    stacked_lstm=False,
                    rnn_units_2=None,
-                   checkpoint_dir=None,
-                   checkpoint_tolerance=0.001):
+                   checkpoint_dir=None):
 
     keras_model = model.build_model(extended_vocab_size,
                                     embedding_dim,
@@ -54,13 +53,12 @@ def keras_evaluate(state,
         metrics_tracker.add_metrics_by_name(metrics_tracker.metric_names[i], result)
 
     if checkpoint_dir:
-        metric_vals = metrics_tracker.get_metrics_by_name(metrics_tracker.champion_metric_name)
-        current_iter = len(metric_vals)
-        current_val = metric_vals[-1]
+        metric_values = metrics_tracker.get_metrics_by_name(metrics_tracker.champion_metric_name)
+        current_iter = len(metric_values) - 1
 
-        if (current_val - metrics_tracker.champion_metric_value) > checkpoint_tolerance:
-            name = 'iter{}_{}'.format(current_iter, metrics_tracker.champion_metric_name)
-            keras_model.save_weights(checkpoint_dir + name)
+        if current_iter == metrics_tracker.champion_metric_iter:
+            print('\nSaving model weights at iteration: {}'.format(current_iter))
+            keras_model.save_weights(filepath=checkpoint_dir + 'weights.h5', overwrite=True)
 
 def load_and_test_model_from_checkpoint(checkpoint,
                                         test_dataset,
@@ -89,18 +87,23 @@ def load_and_test_model_from_checkpoint(checkpoint,
 
     evaluation_results = keras_model.evaluate(test_dataset)
 
-    with open(checkpoint + 'metrics.txt', 'w') as f: 
+    with open(checkpoint + '_test_metrics.txt', 'w') as f:
         for i, result in enumerate(evaluation_results):
             f.write('{}, {}\n'.format(metrics_tracker.metric_names[i], result))
+            print(metrics_tracker.metric_names[i], result)
 
 class model_history_tracker:
 
-    def __init__(self, metric_names=[], champion_metric_name='accuracy'):
+    def __init__(self,
+                 metric_names=[],
+                 champion_metric_name='accuracy',
+                 champion_metric_iter=0,
+                 champion_metric_value=0):
 
         self.metric_names = metric_names
         self.champion_metric_name = champion_metric_name
-        self.champion_metric_iter = 0
-        self.champion_metric_value = 0
+        self.champion_metric_iter = champion_metric_iter
+        self.champion_metric_value = champion_metric_value
         self.metrics_dict = {name:[] for name in metric_names}
 
     def get_metrics_by_name(self, metric_name):
@@ -116,5 +119,4 @@ class model_history_tracker:
         if metric_name == self.champion_metric_name:
             metric_values = np.array(self.metrics_dict[metric_name])
             self.champion_metric_iter = np.argmax(metric_values)
-            self.champion_metric_value = metric_result
-
+            self.champion_metric_value = metric_values[self.champion_metric_iter]
