@@ -4,6 +4,9 @@ Federated learning with text DNNs for DATA 591 at University of Washington.  See
 ##### Data
 The main dataset used for these experiments is hosted by Kaggle and made available through the [tff.simulation.datasets module in the Tensorflow Federated API](https://www.tensorflow.org/federated/api_docs/python/tff/simulation/datasets/stackoverflow/load_data).  Stack Overflow owns the data and has released the data under the [CC BY-SA 3.0 license](https://creativecommons.org/licenses/by-sa/3.0/).
 
+##### Environment
+Experiments were conducted in a Python 3.7 conda environment with the packages in `requirements.txt` on both GPU and CPU VMs running Ubuntu 16.04.
+
 ##### References
 This project draws mainly from the following sources, but other sources are referenced throughout this repository. Special thanks to Keith Rush and Peter Kairouz from Google for their guidance throughout the course of this project.  
 
