@@ -87,10 +87,15 @@ def load_and_test_model_from_checkpoint(checkpoint,
 
     evaluation_results = keras_model.evaluate(test_dataset)
 
+    metrics, results = [], []
     with open(checkpoint + '_test_metrics.txt', 'w') as f:
         for i, result in enumerate(evaluation_results):
             f.write('{}, {}\n'.format(metrics_tracker.metric_names[i], result))
             print(metrics_tracker.metric_names[i], result)
+            metrics.append(metrics_tracker.metric_names[i])
+            results.append(result)
+
+    return metrics, results
 
 class model_history_tracker:
 
