@@ -59,7 +59,7 @@ def create_matrix_from_pretrained_embeddings(word2embedding,
     """
 
     # Extended vocab includes tokens in the order of preprocessing in dataset.py
-    pad, oov, bos, eos  = dataset.get_special_token_words()
+    pad, oov, bos, eos = dataset.get_special_token_words()
     extended_vocab = [pad] + vocab + [oov, bos, eos]
 
     init_params = tf.random_uniform_initializer().get_config()
@@ -70,7 +70,7 @@ def create_matrix_from_pretrained_embeddings(word2embedding,
 
     missing = 0
     for i, word in enumerate(extended_vocab):
-        vector = word2embedding.get(word)
+        vector = word2embedding.get(key=word, value=None)
         if (word not in [pad, oov, bos, eos]) and (vector is not None):
             embedding_matrix[i] = vector
         else:
