@@ -70,7 +70,7 @@ def create_matrix_from_pretrained_embeddings(word2embedding,
 
     missing = 0
     for i, word in enumerate(extended_vocab):
-        vector = word2embedding.get(key=word, value=None)
+        vector = word2embedding.get(word)
         if (word not in [pad, oov, bos, eos]) and (vector is not None):
             embedding_matrix[i] = vector
         else:
