@@ -35,6 +35,7 @@ def keras_evaluate(state,
                    rnn_units_2=None,
                    checkpoint_dir=None):
 
+    # initalized weights will be replaced with weights from tff model state
     keras_model = model.build_model(extended_vocab_size,
                                     embedding_dim,
                                     embedding_matrix,
@@ -65,16 +66,16 @@ def load_and_test_model_from_checkpoint(checkpoint,
                                         extended_vocab_size,
                                         vocab_size,
                                         embedding_dim,
-                                        embedding_matrix,
                                         rnn_units,
                                         metrics_tracker,
                                         stacked_lstm=False,
                                         rnn_units_2=None):
 
-    keras_model = model.build_model(extended_vocab_size,
-                                    embedding_dim,
-                                    embedding_matrix,
-                                    rnn_units,
+    # initalized weights will be replaced with weights from checkpoint
+    keras_model = model.build_model(extended_vocab_size=extended_vocab_size,
+                                    embedding_dim=embedding_dim,
+                                    embedding_matrix='uniform',
+                                    rnn_units=rnn_units,
                                     stacked_lstm=stacked_lstm,
                                     rnn_units_2=rnn_units_2)
 
