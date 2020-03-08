@@ -17,5 +17,5 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Note: Some files in this repository are licensed by the Tensorflow authors and
-these files reference specific licenses for the Tensorflow project. 
+Note: Some files in this repository are licensed by the Tensorflow Federated
+authors and these files reference specific licenses for the TFF project. 

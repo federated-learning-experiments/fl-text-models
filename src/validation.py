@@ -1,3 +1,23 @@
+# Copyright 2020, Joel Stremmel and Arjun Singh.
+#
+# Licensed under the MIT License;
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+This file is used to validate federated models and borrows from the
+Tensorflow Federated Authors code located here at the time of writing:
+github.com/tensorflow/federated/tree/master/tensorflow_federated/python/research
+"""
+
 import numpy as np
 import tensorflow as tf
 import tensorflow_federated as tff
@@ -12,13 +32,18 @@ def get_metrics(vocab_size):
     pad, oov, _, eos = dataset.get_special_tokens(vocab_size)
 
     evaluation_metrics = [
-        metrics.NumTokensCounter(name='num_tokens', masked_tokens=[pad]),
-        metrics.NumTokensCounter(name='num_tokens_no_oov', masked_tokens=[pad, oov]),
+        metrics.NumTokensCounter(name='num_tokens',
+            masked_tokens=[pad]),
+        metrics.NumTokensCounter(name='num_tokens_no_oov',
+            masked_tokens=[pad, oov]),
         metrics.NumBatchesCounter(name='num_batches'),
         metrics.NumExamplesCounter(name='num_examples'),
-        metrics.MaskedCategoricalAccuracy(name='accuracy', masked_tokens=[pad]),
-        metrics.MaskedCategoricalAccuracy(name='accuracy_no_oov', masked_tokens=[pad, oov]),
-        metrics.MaskedCategoricalAccuracy(name='accuracy_no_oov_no_eos', masked_tokens=[pad, oov, eos])
+        metrics.MaskedCategoricalAccuracy(name='accuracy',
+            masked_tokens=[pad]),
+        metrics.MaskedCategoricalAccuracy(name='accuracy_no_oov',
+            masked_tokens=[pad, oov]),
+        metrics.MaskedCategoricalAccuracy(name='accuracy_no_oov_no_eos',
+            masked_tokens=[pad, oov, eos])
     ]
 
     return evaluation_metrics
@@ -51,15 +76,19 @@ def keras_evaluate(state,
     evaluation_results = keras_model.evaluate(val_dataset)
 
     for i, result in enumerate(evaluation_results):
-        metrics_tracker.add_metrics_by_name(metrics_tracker.metric_names[i], result)
+        metrics_tracker.add_metrics_by_name(
+            metrics_tracker.metric_names[i], result)
 
     if checkpoint_dir:
-        metric_values = metrics_tracker.get_metrics_by_name(metrics_tracker.champion_metric_name)
+        metric_values = metrics_tracker.get_metrics_by_name(
+            metrics_tracker.champion_metric_name)
         current_iter = len(metric_values) - 1
 
         if current_iter == metrics_tracker.champion_metric_iter:
-            print('\nSaving model weights at iteration: {}'.format(current_iter))
-            keras_model.save_weights(filepath=checkpoint_dir + 'weights.h5', overwrite=True)
+            print('\nSaving model weights at iteration: {}'.format(
+                current_iter))
+            keras_model.save_weights(
+                filepath=checkpoint_dir + 'weights.h5', overwrite=True)
 
 def load_and_test_model_from_checkpoint(checkpoint,
                                         test_dataset,
@@ -83,7 +112,8 @@ def load_and_test_model_from_checkpoint(checkpoint,
     evaluation_metrics = get_metrics(vocab_size)
 
     model.compile_model(keras_model, evaluation_metrics)
-    sample_batch = tf.nest.map_structure(lambda x: x.numpy(), next(iter(test_dataset)))
+    sample_batch = tf.nest.map_structure(
+        lambda x: x.numpy(), next(iter(test_dataset)))
     tff.learning.from_compiled_keras_model(keras_model, sample_batch)
 
     evaluation_results = keras_model.evaluate(test_dataset)
@@ -125,4 +155,5 @@ class model_history_tracker:
         if metric_name == self.champion_metric_name:
             metric_values = np.array(self.metrics_dict[metric_name])
             self.champion_metric_iter = np.argmax(metric_values)
-            self.champion_metric_value = metric_values[self.champion_metric_iter]
+            self.champion_metric_value = metric_values[
+                self.champion_metric_iter]

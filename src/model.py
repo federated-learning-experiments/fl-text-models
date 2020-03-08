@@ -1,3 +1,21 @@
+# Copyright 2020, Joel Stremmel and Arjun Singh.
+#
+# Licensed under the MIT License;
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+This file is used to build federated keras models.
+"""
+
 import tensorflow as tf
 import tensorflow_federated as tff
 
@@ -19,31 +37,36 @@ def build_model(extended_vocab_size,
     model1_input = tf.keras.Input(shape=(None, ),
                                   name='model1_input')
 
-    model1_embedding = tf.keras.layers.Embedding(input_dim=extended_vocab_size,
-                                                 output_dim=embedding_dim,
-                                                 embeddings_initializer=embedding_matrix,
-                                                 mask_zero=True,
-                                                 trainable=True,
-                                                 name='model1_embedding')(model1_input)
+    model1_embedding = tf.keras.layers.Embedding(
+        input_dim=extended_vocab_size,
+        output_dim=embedding_dim,
+        embeddings_initializer=embedding_matrix,
+        mask_zero=True,
+        trainable=True,
+        name='model1_embedding')(model1_input)
 
-    model1_lstm = tf.keras.layers.LSTM(units=rnn_units,
-                                       return_sequences=True,
-                                       recurrent_initializer='glorot_uniform',
-                                       name='model1_lstm')(model1_embedding)
+    model1_lstm = tf.keras.layers.LSTM(
+        units=rnn_units,
+        return_sequences=True,
+        recurrent_initializer='glorot_uniform',
+        name='model1_lstm')(model1_embedding)
+
     if stacked_lstm:
-        model2_lstm = tf.keras.layers.LSTM(units=rnn_units_2,
-                                           return_sequences=True,
-                                           recurrent_initializer='glorot_uniform',
-                                           name='model2_lstm')(model1_lstm)
+        model2_lstm = tf.keras.layers.LSTM(
+            units=rnn_units_2,
+            return_sequences=True,
+            recurrent_initializer='glorot_uniform',
+            name='model2_lstm')(model1_lstm)
+
         model_lstm = model2_lstm
     else:
         model_lstm = model1_lstm
 
-    model1_dense1 = tf.keras.layers.Dense(units=embedding_dim)(model_lstm)
+    dense1 = tf.keras.layers.Dense(units=embedding_dim)(model_lstm)
 
-    model1_dense2 = tf.keras.layers.Dense(units=extended_vocab_size)(model1_dense1)
+    dense2 = tf.keras.layers.Dense(units=extended_vocab_size)(dense1)
 
-    final_model = tf.keras.Model(inputs=model1_input, outputs=model1_dense2)
+    final_model = tf.keras.Model(inputs=model1_input, outputs=dense2)
 
     return final_model
 

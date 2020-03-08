@@ -1,9 +1,29 @@
+# Copyright 2020, Joel Stremmel and Arjun Singh.
+#
+# Licensed under the MIT License;
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+This file is used to construct word embeddings for federated models.
+"""
+
 import os, sys
 sys.path.append(os.getcwd())
 
 from . import dataset
 
 import warnings
+import errno
+
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -28,6 +48,10 @@ def load_embeddings(embedding_path):
       word2embedding: `dict` of words and embeddings `numpy.array()`.
     """
 
+    if not os.path.isfile(embedding_path):
+        raise FileNotFoundError(
+            errno.ENOENT, os.strerror(errno.ENOENT), embedding_path)
+
     word2embedding = {}
     with open(embedding_path, 'r') as f:
         for line in f:
@@ -44,9 +68,9 @@ def create_matrix_from_pretrained_embeddings(word2embedding,
     """
     Code modified from: https://keras.io/examples/pretrained_word_embeddings/.
     Here we initialize the embedding matrix to random uniform values according
-    to the random uniform initializer in tf.keras used by tf.keras.layers.Embedding.
-    This way any words without embeddings are mapped according to this random
-    distribution and can be learned.
+    to the random uniform initializer in tf.keras used by
+    `tf.keras.layers.Embedding`. This way any words without embeddings are
+    mapped according to this random distribution and can be learned.
 
     Args:
       word2embedding: `dict` of words and embeddings `numpy.array()`.
@@ -196,7 +220,7 @@ def to_pp_pca_pp_projections(word2embedding, vocab, n, d=7):
     Args:
       word2embedding: `dict` of words and embeddings `numpy.array()`.
       vocab: `list` of words in vocab.
-      n: `int` representing number of principle components to use for projection.
+      n: `int` representing num of principle components to use for projection.
       d: `int` top d dimensions parameter from the paper which used d=7.
 
     Returns:
@@ -239,6 +263,112 @@ def to_pp_pca_pp_projections(word2embedding, vocab, n, d=7):
     for i, word in enumerate(words):
         final_pca_embeddings[word] = X_new_final[i]
         for u in Ufit[0:d]:
-            final_pca_embeddings[word] = final_pca_embeddings[word] - np.dot(u.transpose(), final_pca_embeddings[word]) * u
+            final_pca_embeddings[word] = final_pca_embeddings[word] - \
+                np.dot(u.transpose(), final_pca_embeddings[word]) * u
 
     return final_pca_embeddings
+
+def build_embedding_layer(embedding_type, embedding_dim, vocab,
+        base_path='word_embeddings/'):
+    """
+    If the 'embedding_type' option is set to 'random',
+    the embedding matrix in the embedding layer is
+    initialized according to the random uniform distribution
+    used by the `tf.keras` embedding layer by passing the
+    'uniform' string as an argument to the 'embedding_initializer'
+    in the `model.build_model` function.
+
+    If one of the allowed word embedding options is set,
+    an index called 'word2embedding' is created from pretrained
+    embeddings either loaded from the 'word_embeddings' directory
+    which must be created within the 'fl-text-models' directory
+    or created from a pretrained model in the case of GPT2 embeddings.
+    The 'word2embedding' dictionary is used to create a
+    `tf.keras.initializers.Constant` embedding matrix to be
+    passed to the `model.build_model` function.
+
+    If the the 'embedding_type' option is not set to one
+    of the allowed options or the GloVe or FastText option
+    is set when the 'word_embeddings'' directory does not exist,
+    this function will raise an error.
+
+    Args:
+      embedding_type: `str` equal to one of:
+                   ['random',
+                    'glove',
+                    'fasttext',
+                    'pca_fasttext',
+                    'pp_pca_pp_fasttext',
+                    'gpt2',
+                    'pca_gpt2',
+                    'pp_pca_pp_gpt2'].
+      embedding_dim: size of each word embedding as `int`.
+      vocab: `list` of words in vocab.
+      base_path: `str` path to the `word_embedding` dir.
+
+    Returns:
+      embedding_matrix: matrix of type `tf.keras.initializers.Constant`
+        to be passed to `tf.keras.layers.Embedding`.
+    """
+
+    if embedding_type == 'random':
+        pass
+
+    elif embedding_type == 'glove':
+        embedding_path = base_path + 'glove/glove.6B.{}d.txt'.format(
+            embedding_dim)
+        word2embedding = load_embeddings(embedding_path)
+
+    elif embedding_type == 'fasttext':
+        embedding_path = base_path + 'fasttext/wiki-news-300d-1M.vec'
+        word2embedding = load_embeddings(embedding_path)
+
+    elif embedding_type == 'pca_fasttext':
+        embedding_path = base_path + 'fasttext/wiki-news-300d-1M.vec'
+        word2embedding = load_embeddings(embedding_path)
+        word2embedding = to_pca_projections(
+            word2embedding, vocab, embedding_dim)
+
+    elif embedding_type == 'pp_pca_pp_fasttext':
+        embedding_path = base_path + 'fasttext/wiki-news-300d-1M.vec'
+        word2embedding = load_embeddings(embedding_path)
+        word2embedding = to_pp_pca_pp_projections(
+            word2embedding, vocab, embedding_dim)
+
+    elif embedding_type == 'gpt2':
+        word2embedding = create_gpt_embeddings(vocab)
+        word2embedding = to_pca_projections(
+            word2embedding, vocab, embedding_dim)
+
+    elif embedding_type == 'pca_gpt2':
+        word2embedding = create_gpt_embeddings(vocab)
+        word2embedding = to_pca_projections(
+            word2embedding, vocab, embedding_dim)
+
+    elif embedding_type == 'pp_pca_pp_gpt2':
+        word2embedding = create_gpt_embeddings(vocab)
+        word2embedding = to_pp_pca_pp_projections(
+            word2embedding, vocab, embedding_dim)
+
+    else:
+        layer_opts = ['random',
+                      'glove',
+                      'fasttext',
+                      'pca_fasttext',
+                      'pp_pca_pp_fasttext',
+                      'gpt2',
+                      'pca_gpt2',
+                      'pp_pca_pp_gpt2']
+
+        raise ValueError("Embedding layer type must be in {}.".format(
+            layer_opts))
+
+    if embedding_type == 'random':
+        embedding_matrix = 'uniform'
+    else:
+        embedding_matrix = create_matrix_from_pretrained_embeddings(
+            word2embedding=word2embedding,
+            embedding_dim=embedding_dim,
+            vocab=vocab)
+
+    return embedding_matrix
