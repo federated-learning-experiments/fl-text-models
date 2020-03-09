@@ -37,9 +37,12 @@ if len(sys.argv) < 2:
     raise ValueError('Supply an experiment directory as an argument')
 
 experiment_dir = sys.argv[1]
-paths = {'examples': experiment_dir + 'num_examples.npy',
-         'train_acc': experiment_dir + 'train_accuracy.npy',
-         'val_acc': experiment_dir + 'val_accuracy.npy'}
+paths = {
+    'examples': experiment_dir + 'num_examples.npy',
+    'train_acc': experiment_dir + 'train_accuracy.npy',
+    'val_acc': experiment_dir + 'val_accuracy.npy',
+    'val_acc_no_oov_no_eos': experiment_dir + 'val_accuracy_no_oov_no_eos.npy'
+    }
 
 if not np.all(np.array([os.path.exists(path) for path in paths.values()])):
     raise FileNotFoundError(
@@ -47,12 +50,22 @@ if not np.all(np.array([os.path.exists(path) for path in paths.values()])):
             'One of: {}'.format(list(paths.values())))
 
 examples = np.load(paths['examples'])
-train_accuracy = np.load(paths['train_acc'])
-val_accuracy = np.load(paths['val_acc'])
+train_acc = np.load(paths['train_acc'])
+val_acc = np.load(paths['val_acc'])
+val_acc_no_oov_no_eos = np.load(paths['val_acc_no_oov_no_eos'])
+
 n = len(examples)
+mx = np.max(val_acc)
+mx_no = np.max(val_acc_no_oov_no_eos)
+avg = np.mean(val_acc[-100:])
+avg_no = np.mean(val_acc_no_oov_no_eos[-100:])
 
 for i in range(0, n):
     print('Sampled {} examples at round {}.'.format(examples[i], i))
-    print('    Train accuracy = {}'.format(train_accuracy[i]))
-    print('    Validation accuracy = {}'.format(val_accuracy[i]))
-    print('    Max validation accuracy = {}'.format(np.max(val_accuracy)))
+    print('    Train accuracy = {}'.format(train_acc[i]))
+    print('    Val acc = {}'.format(val_acc[i]))
+    print('    Val acc no oov no eos = {}'.format(val_acc_no_oov_no_eos[i]))
+    print('    Max val acc = {}'.format(mx))
+    print('    Max val acc no oov no eos = {}'.format(mx_no))
+    print('    Average of last 100 val acc = {}'.format(avg))
+    print('    Average of last 100 val acc no oov no eos = {}'.format(avg_no))

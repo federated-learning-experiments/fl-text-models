@@ -265,6 +265,8 @@ for round_num in tqdm(range(0, NUM_ROUNDS)):
         train_metrics_tracker.get_metrics_by_name('accuracy'))
     np.save(sav + 'val_accuracy.npy',
         val_metrics_tracker.get_metrics_by_name('accuracy'))
+    np.save(sav + 'val_accuracy_no_oov_no_eos',
+        val_metrics_tracker.get_metrics_by_name('accuracy_no_oov_no_oes'))
 
     # Save train sample stats
     np.save(sav + 'num_examples.npy',
