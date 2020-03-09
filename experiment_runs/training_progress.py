@@ -40,8 +40,11 @@ experiment_dir = sys.argv[1]
 paths = {
     'examples': experiment_dir + 'num_examples.npy',
     'train_acc': experiment_dir + 'train_accuracy.npy',
+    'train_acc_no_oov_no_eos':
+        experiment_dir + 'train_accuracy_no_oov_no_eos.npy',
     'val_acc': experiment_dir + 'val_accuracy.npy',
-    'val_acc_no_oov_no_eos': experiment_dir + 'val_accuracy_no_oov_no_eos.npy'
+    'val_acc_no_oov_no_eos':
+        experiment_dir + 'val_accuracy_no_oov_no_eos.npy'
     }
 
 if not np.all(np.array([os.path.exists(path) for path in paths.values()])):
@@ -51,6 +54,7 @@ if not np.all(np.array([os.path.exists(path) for path in paths.values()])):
 
 examples = np.load(paths['examples'])
 train_acc = np.load(paths['train_acc'])
+train_acc_no_oov_no_eos = np.load(paths['train_acc_no_oov_no_eos'])
 val_acc = np.load(paths['val_acc'])
 val_acc_no_oov_no_eos = np.load(paths['val_acc_no_oov_no_eos'])
 
@@ -62,7 +66,8 @@ avg_no = np.mean(val_acc_no_oov_no_eos[-100:])
 
 for i in range(0, n):
     print('Sampled {} examples at round {}.'.format(examples[i], i))
-    print('    Train accuracy = {}'.format(train_acc[i]))
+    print('    Train acc = {}'.format(train_acc[i]))
+    print('    Train acc no oov no eos = {}'.format(train_acc_no_oov_no_eos[i]))
     print('    Val acc = {}'.format(val_acc[i]))
     print('    Val acc no oov no eos = {}'.format(val_acc_no_oov_no_eos[i]))
     print('    Max val acc = {}'.format(mx))

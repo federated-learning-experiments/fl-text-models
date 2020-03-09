@@ -179,7 +179,7 @@ evaluation_metric_names = ['loss',
                            'num_examples',
                            'accuracy',
                            'accuracy_no_oov',
-                           'accuracy_no_oov_no_oes']
+                           'accuracy_no_oov_no_eos']
 
 train_metrics_tracker = validation.model_history_tracker(
     metric_names=evaluation_metric_names)
@@ -243,12 +243,16 @@ for round_num in tqdm(range(0, NUM_ROUNDS)):
     print('   num_tokens_no_oov: {}'.format(server_metrics.num_tokens_no_oov))
     print('   accuracy: {:.5f}'.format(server_metrics.accuracy))
     print('   accuracy_no_oov: {:.5f}'.format(server_metrics.accuracy_no_oov))
+    print('   accuracy_no_oov_no_eos: {:.5f}'.format(
+        server_metrics.accuracy_no_oov_no_eos))
 
     # Add train metrics to tracker
     train_metrics_tracker.add_metrics_by_name(
         'loss', server_metrics.loss)
     train_metrics_tracker.add_metrics_by_name(
         'accuracy', server_metrics.accuracy)
+    train_metrics_tracker.add_metrics_by_name(
+        'accuracy_no_oov_no_eos', server_metrics.accuracy_no_oov_no_eos)
     train_metrics_tracker.add_metrics_by_name(
         'num_examples', server_metrics.num_examples)
     train_metrics_tracker.add_metrics_by_name(
@@ -263,10 +267,12 @@ for round_num in tqdm(range(0, NUM_ROUNDS)):
         val_metrics_tracker.get_metrics_by_name('loss'))
     np.save(sav + 'train_accuracy.npy',
         train_metrics_tracker.get_metrics_by_name('accuracy'))
+    np.save(sav + 'train_accuracy_no_oov_no_eos.npy',
+        train_metrics_tracker.get_metrics_by_name('accuracy_no_oov_no_eos'))
     np.save(sav + 'val_accuracy.npy',
         val_metrics_tracker.get_metrics_by_name('accuracy'))
     np.save(sav + 'val_accuracy_no_oov_no_eos',
-        val_metrics_tracker.get_metrics_by_name('accuracy_no_oov_no_oes'))
+        val_metrics_tracker.get_metrics_by_name('accuracy_no_oov_no_eos'))
 
     # Save train sample stats
     np.save(sav + 'num_examples.npy',
