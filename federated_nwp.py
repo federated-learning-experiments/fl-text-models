@@ -234,53 +234,14 @@ for round_num in tqdm(range(0, NUM_ROUNDS)):
     server_state, server_metrics = iterative_process.next(
         server_state, train_datasets)
 
-    # Examine training metrics
-    print('Round: {}'.format(round_num))
-    print('   Loss: {:.8f}'.format(server_metrics.loss))
-    print('   num_batches: {}'.format(server_metrics.num_batches))
-    print('   num_examples: {}'.format(server_metrics.num_examples))
-    print('   num_tokens: {}'.format(server_metrics.num_tokens))
-    print('   num_tokens_no_oov: {}'.format(server_metrics.num_tokens_no_oov))
-    print('   accuracy: {:.5f}'.format(server_metrics.accuracy))
-    print('   accuracy_no_oov: {:.5f}'.format(server_metrics.accuracy_no_oov))
-    print('   accuracy_no_oov_no_eos: {:.5f}'.format(
-        server_metrics.accuracy_no_oov_no_eos))
+    # Add train metrics to tracker, print current value, and save
+    for i, name in enumerate(train_metrics_tracker.metric_names):
 
-    # Add train metrics to tracker
-    train_metrics_tracker.add_metrics_by_name(
-        'loss', server_metrics.loss)
-    train_metrics_tracker.add_metrics_by_name(
-        'accuracy', server_metrics.accuracy)
-    train_metrics_tracker.add_metrics_by_name(
-        'accuracy_no_oov_no_eos', server_metrics.accuracy_no_oov_no_eos)
-    train_metrics_tracker.add_metrics_by_name(
-        'num_examples', server_metrics.num_examples)
-    train_metrics_tracker.add_metrics_by_name(
-        'num_tokens', server_metrics.num_tokens)
-    train_metrics_tracker.add_metrics_by_name(
-        'num_tokens_no_oov', server_metrics.num_tokens_no_oov)
-
-    # Save loss and accuracy from train and validation sets
-    np.save(sav + 'train_loss.npy',
-        train_metrics_tracker.get_metrics_by_name('loss'))
-    np.save(sav + 'val_loss.npy',
-        val_metrics_tracker.get_metrics_by_name('loss'))
-    np.save(sav + 'train_accuracy.npy',
-        train_metrics_tracker.get_metrics_by_name('accuracy'))
-    np.save(sav + 'train_accuracy_no_oov_no_eos.npy',
-        train_metrics_tracker.get_metrics_by_name('accuracy_no_oov_no_eos'))
-    np.save(sav + 'val_accuracy.npy',
-        val_metrics_tracker.get_metrics_by_name('accuracy'))
-    np.save(sav + 'val_accuracy_no_oov_no_eos',
-        val_metrics_tracker.get_metrics_by_name('accuracy_no_oov_no_eos'))
-
-    # Save train sample stats
-    np.save(sav + 'num_examples.npy',
-        train_metrics_tracker.get_metrics_by_name('num_examples'))
-    np.save(sav + 'num_tokens.npy',
-        train_metrics_tracker.get_metrics_by_name('num_tokens'))
-    np.save(sav + 'num_tokens_no_oov.npy',
-        train_metrics_tracker.get_metrics_by_name('num_tokens_no_oov'))
+        result = getattr(server_metrics, name)
+        train_metrics_tracker.add_metrics_by_name(name, result)
+        print('   {}: {}'.format(name, result))
+        np.save(sav + 'train_' + name + '.npy',
+            train_metrics_tracker.get_metrics_by_name(name))
 
     # Write time since start of training
     with open(sav + 'train_time.txt', 'a+') as f:
@@ -298,11 +259,9 @@ round_config = 'Clients: {},\
 
 # Plot Train and Validation Loss
 fig, ax = plt.subplots(figsize=(20, 15))
-x_axis = range(0, NUM_ROUNDS)
-ax.plot(x_axis, train_metrics_tracker.get_metrics_by_name(
-    'loss'), label='Train')
-ax.plot(x_axis, val_metrics_tracker.get_metrics_by_name(
-    'loss'), label='Val')
+x_ax = range(0, NUM_ROUNDS)
+ax.plot(x_ax, np.load(sav + 'train_loss.npy'), label='Train')
+ax.plot(x_ax, np.load(sav + 'val_loss.npy'), label='Val')
 ax.legend(loc='best', prop={'size': 15})
 plt.title('Loss by Epoch - {}'.format(round_config), fontsize=18)
 plt.xlabel('Epochs', fontsize=18)
@@ -312,17 +271,15 @@ plt.savefig(sav + 'Loss by Epoch.png')
 
 # Plot Train and Validation Accuracy
 fig, ax = plt.subplots(figsize=(20, 15))
-x_axis = range(0, NUM_ROUNDS)
-ax.plot(x_axis, train_metrics_tracker.get_metrics_by_name(
-    'accuracy'), label='Train')
-ax.plot(x_axis, val_metrics_tracker.get_metrics_by_name(
-    'accuracy'), label='Val')
+x_ax = range(0, NUM_ROUNDS)
+ax.plot(x_ax, np.load(sav + 'train_accuracy_no_oov_no_eos.npy'), label='Train')
+ax.plot(x_ax, np.load(sav + 'val_accuracy_no_oov_no_eos.npy'), label='Val')
 ax.legend(loc='best', prop={'size': 15})
 plt.title('Accuracy by Epoch - {}'.format(round_config), fontsize=18)
 plt.xlabel('Epochs', fontsize=18)
 plt.ylabel('Accuracy', fontsize=18)
 plt.tight_layout()
-plt.savefig(sav + 'Accuracy by Epoch.png')
+plt.savefig(sav + 'Accuracy No OOV No EOS by Epoch.png')
 
 # Load Train Sample Stats
 examples = np.load(sav + 'num_examples.npy')
@@ -330,15 +287,17 @@ tokens = np.load(sav + 'num_tokens.npy')
 tokens_no_oov = np.load(sav + 'num_tokens_no_oov.npy')
 
 # Compute Train Sample Means and Standard Deviations
+def mean_err(arr, z=1.96):
+    return np.mean(arr) * z * np.std(arr)/np.sqrt(len(arr))
+
 train_sample_stats = ['Examples', 'Tokens', 'Tokens No OOV']
 means = [np.mean(examples), np.mean(tokens), np.mean(tokens_no_oov)]
-stdvs = [np.std(examples), np.std(tokens), np.std(tokens_no_oov)]
+errors = [mean_err(examples), mean_err(tokens), mean_err(tokens_no_oov)]
 
 # Plot Train Sample Means
-plt.clf()
 fig, ax = plt.subplots(figsize=(10, 10))
 x_pos = np.arange(len(train_sample_stats))
-ax.bar(x_pos, means, yerr=stdvs, align='center',
+ax.bar(x_pos, means, yerr=errors, align='center',
     alpha=0.5, ecolor='black', capsize=10)
 ax.set_ylabel('Sample Mean +- 1 Stdv')
 ax.set_xticks(x_pos)
@@ -348,7 +307,6 @@ plt.tight_layout()
 plt.savefig(sav + '{} Round Train Sample Means.png'.format(NUM_ROUNDS))
 
 # Plot Train Sample Distributions
-plt.clf()
 fig, ax = plt.subplots(figsize=(10, 10))
 plt.hist(examples, alpha=0.4, label='Num Examples')
 plt.hist(tokens, alpha=0.4, label='Num Tokens')
