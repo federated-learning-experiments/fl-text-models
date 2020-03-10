@@ -15,7 +15,7 @@
 """
 **Word Level Federated Text Generation with Stack Overflow:**
 
-- Last updated 03-07-20
+- Last updated 03-09-20
 - Runs on GCP and local Ubuntu 16.04
 
 **About:**
@@ -240,7 +240,9 @@ for round_num in tqdm(range(0, NUM_ROUNDS)):
         result = getattr(server_metrics, name)
         train_metrics_tracker.add_metrics_by_name(name, result)
         print('   {}: {}'.format(name, result))
-        np.save(sav + 'train_' + name + '.npy',
+
+        prefix = 'train_' if ('loss' in name or 'accuracy' in name) else ''
+        np.save(sav + prefix + name + '.npy',
             train_metrics_tracker.get_metrics_by_name(name))
 
     # Write time since start of training
@@ -277,7 +279,7 @@ ax.plot(x_ax, np.load(sav + 'val_accuracy_no_oov_no_eos.npy'), label='Val')
 ax.legend(loc='best', prop={'size': 15})
 plt.title('Accuracy by Epoch - {}'.format(round_config), fontsize=18)
 plt.xlabel('Epochs', fontsize=18)
-plt.ylabel('Accuracy', fontsize=18)
+plt.ylabel('Accuracy No OOV No EOS', fontsize=18)
 plt.tight_layout()
 plt.savefig(sav + 'Accuracy No OOV No EOS by Epoch.png')
 
@@ -286,10 +288,12 @@ examples = np.load(sav + 'num_examples.npy')
 tokens = np.load(sav + 'num_tokens.npy')
 tokens_no_oov = np.load(sav + 'num_tokens_no_oov.npy')
 
-# Compute Train Sample Means and Standard Deviations
-def mean_err(arr, z=1.96):
-    return np.mean(arr) * z * np.std(arr)/np.sqrt(len(arr))
+# Define Function to Compute 95% Confidence Interval Errors
+def mean_err(arr):
+    """Compute 95% CI errors."""
+    return 1.96 * np.std(arr)/np.sqrt(len(arr))
 
+# Compute Train Sample Means and 95% Confidence Interval Errors
 train_sample_stats = ['Examples', 'Tokens', 'Tokens No OOV']
 means = [np.mean(examples), np.mean(tokens), np.mean(tokens_no_oov)]
 errors = [mean_err(examples), mean_err(tokens), mean_err(tokens_no_oov)]
@@ -299,7 +303,7 @@ fig, ax = plt.subplots(figsize=(10, 10))
 x_pos = np.arange(len(train_sample_stats))
 ax.bar(x_pos, means, yerr=errors, align='center',
     alpha=0.5, ecolor='black', capsize=10)
-ax.set_ylabel('Sample Mean +- 1 Stdv')
+ax.set_ylabel('Sample Mean with 95% Confidence Interval')
 ax.set_xticks(x_pos)
 ax.set_xticklabels(train_sample_stats)
 ax.set_title('Train Sample Means - {}'.format(round_config))

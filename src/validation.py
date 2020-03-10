@@ -80,7 +80,9 @@ def keras_evaluate(state,
     for i, result in enumerate(evaluation_results):
         name = metrics_tracker.metric_names[i]
         metrics_tracker.add_metrics_by_name(name, result)
-        np.save(checkpoint_dir + 'val_' + name + '.npy',
+
+        prefix = 'val_' if ('loss' in name or 'accuracy' in name) else ''
+        np.save(checkpoint_dir + prefix + name + '.npy',
             metrics_tracker.get_metrics_by_name(name))
 
     # Get historical values for the champion metric
