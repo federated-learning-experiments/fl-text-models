@@ -94,7 +94,7 @@ Comparing the models trained with these word embeddings on the test set with 1 m
 
 <img src="images/emb_test_results.png" alt="drawing" width=500/>
 
-<img src="images/model_sizes.png" alt="drawing"/ width=300>
+<img src="images/model_size.png" alt="drawing" width=300/>
 
 We highlight the large network GPT2 word embeddings (denoted **) with reduced dimension via Algorithm 2 as the best performing approach in terms of accuracy, both with and without end of sentence and out of vocab tokens.
 
