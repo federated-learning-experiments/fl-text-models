@@ -82,11 +82,11 @@ And then again after applying a PCA transformation to 150 dimensions and another
 
 We apply the demonsionality reduction algorithm from Raunak et al. to create word embeddings used for federated next word prediction with the aforementioned model architectures and achieve the following validation set accuracy over 800 training rounds where "PP PCA PP" denotes algorithm two (in which post-processing is applied before and PCA) and D=7 (as in Raunak et al.).  Note here that we plot validation accuracy from many runs where validation accuracy includes end of sentence and out of vocab tokens.  The test accuracy without these tokens included is reported in a table to follow.  See first the small network validation set accuracy across a variety of word embedding representations:
 
-<img src="images/small_val_acc.png" alt="drawing"/>
+<img src="images/small_val_acc.png" alt="drawing" width=800/>
 
 In these small networks, it is apparent that the GloVe embeddings start to gain accuracy ahead of all other approaches.  The randomly initialized embeddings require more training rounds to achieve the same level of accuracy early on with slightly worse performance in later rounds compared to the pretrained methods.  These differences are more pronounced in the large networks:
 
-<img src="images/large_val_acc.png" alt="drawing"/>
+<img src="images/large_val_acc.png" alt="drawing" width=800/>
 
 From the small and large networks we observe that pretrained word embeddings achieve the same level of accuracy sooner, that is, with fewer training rounds compared to random embeddings.  This early boost in performance is valuable in the federated setting in the sense that these embeddings will take up no more space than random embeddings and help the model approach peak accuracy with fewer training rounds, each of which requires communication between the server averaging model parameters and the training clients.  
 
@@ -100,7 +100,21 @@ We highlight the large network GPT2 word embeddings (denoted **) with reduced di
 
 ### Federated Fine Tuning Using a Pretrained Model with Pretrained Word Embeddings
 
-While both model pretraining and starting with pretrained word embeddings provide ways of kicking off federated training with a more intelligent model, it is natural to combine the two approaches.  In doing so we observe the following results:
+As both model pretraining and starting with pretrained word embeddings provide ways of kicking off federated training with more intelligent models, it's natural to combine the two approaches.  In doing so we observed that even with the best of our word embedding approaches, the pretrained model performed worse than starting with federated training using both random and pretrained embeddings.
+
+<img src="images/sp_large_pretrained.png" alt="drawing" width=800/>
+
+We suspect that while pretraining with Shakespeare is effective for the small network, using a model with increased capacity renders this prior information useless, as the nature of Shakespearean English is quite different from that of Stack Overflow.  In this way we think that a dataset more similar to Stack Overlow may yield increased performance for full model pretraining. 
+
+### Comparison to "Adapative Federated Averaging" Stack Overflow Baseline
+
+Our pretraining experiments fixed the client sampling strategy and model architecure as described earlier, though it is natural to wonder if the successes we observe with pretraining, particularly using pretrained word embeddings with the dimensionality reduction algorithm, will still hold with a different federated client sampling strategy and different model architecure.  In ["Adaptive Federated Optimization"](https://arxiv.org/pdf/2003.00295.pdf), Reddi et al. sample 50 clients per training round with a max of only 128 text samples instead of 5,000 as in our experiments.  They also use an embedding dimension of size 96 with an LSTM layer of size 670, feeding to two dense layers of size 96 and 10,004 respectively.  With this sampling strategy and model architecture, we compare randomly initialized word embeddings to our best performing pretrained word embeddings: GPT2 with dimensionality reduction as in Raunak et al. 
+
+<img src="images/adptv_fed_opt_baseline_val_curves.png" alt="drawing" width=800/>
+
+<img src="images/adptv_fed_opt_baseline_val_last100.png" alt="drawing" width=400/>
+
+We find that pretrained word embeddings generally outperform random embeddings across 1,500 rounds of training with evaluation on 10,000 validation samples per training round and a final evaluation performed by averaging the last 100 rounds of validation accuracy without special tokens.  While we demonstrate improvement over this baseline architecture using the same training and evaluation design from Reddi et al., we do not realize the same level of accuracy as the paper which achieves 22.1%, and 22.2% with Adam and Yogi optimizers respectively, as in our experiments we use only the default learning rates for Adam.  Future work would apply learning rate optimization to both embedding approaches to see if pretrained embeddings continue to outperform random.
 
 ### Conclusions and Future Work
 While our initial research demonstrates the possibility of reducing the number of federated training rounds required to achieve acceptable model accuracy through the use of pretrained word embeddings, there is much left to explore, particularly for central pretraining with federated fine tuning, for which we demonstrate a viable procedure but do not achieve performance greater than the federated training baseline. That said, this approach may be fruitful with pretraining data more similar to Stack Overflow than the collected works of Shakespeare.  Also, for both model pretraining and pretrained word embedding approaches, learning rate optimization as in ["Adaptive Federated Optimization"](https://arxiv.org/pdf/2003.00295.pdf) may help address the specific optimization requirements of fine tuning weights that have already undergone some training.  Additionally, using federated simulation to conduct pretraining, such that the initial model weights are learned on non-IID datasets, may improve overall model performance after federated fine tuning.  Simulating federated training conditions to train word embeddings may also yield improved downstream performance by tailoring word representations to reflect different usage across non-IID datasets.  Finally, while GPT2 and other Transformer-based models are achieving state of the art performance on centralized language modeling tasks, the sizes of these models are prohibitively large for federated training and prediction.  While leveraging the embeddings learned from these models for federated training can be immediately useful, as demonstrated here, the ability to reduce the size of these models and train them end to end in a federated way would likely yield state of the art results for federated next word prediction and other natural language understanding tasks.
