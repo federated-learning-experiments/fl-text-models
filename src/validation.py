@@ -56,11 +56,11 @@ def keras_evaluate(state,
                    embedding_matrix,
                    rnn_units,
                    metrics_tracker,
+                   checkpoint_dir,
                    stacked_lstm=False,
-                   rnn_units_2=None,
-                   checkpoint_dir=None):
+                   rnn_units_2=None):
 
-    # initalized weights will be replaced with weights from tff model state
+    # Initalized weights will be replaced with weights from tff model state
     keras_model = model.build_model(extended_vocab_size,
                                     embedding_dim,
                                     embedding_matrix,
@@ -68,27 +68,33 @@ def keras_evaluate(state,
                                     stacked_lstm=stacked_lstm,
                                     rnn_units_2=rnn_units_2)
 
+    # Retrieve evaluation metrics, compile model, assign weights from training
     evaluation_metrics = get_metrics(vocab_size)
-
     model.compile_model(keras_model, evaluation_metrics)
     tff.learning.assign_weights_to_keras_model(keras_model, state.model)
 
+    # Evaluate the model on the validation dataset
     evaluation_results = keras_model.evaluate(val_dataset)
 
+    # Add validation metrics to tracker and save to checkpoint directory
     for i, result in enumerate(evaluation_results):
-        metrics_tracker.add_metrics_by_name(
-            metrics_tracker.metric_names[i], result)
+        name = metrics_tracker.metric_names[i]
+        metrics_tracker.add_metrics_by_name(name, result)
 
-    if checkpoint_dir:
-        metric_values = metrics_tracker.get_metrics_by_name(
-            metrics_tracker.champion_metric_name)
-        current_iter = len(metric_values) - 1
+        prefix = 'val_' if ('loss' in name or 'accuracy' in name) else ''
+        np.save(checkpoint_dir + prefix + name + '.npy',
+            metrics_tracker.get_metrics_by_name(name))
 
-        if current_iter == metrics_tracker.champion_metric_iter:
-            print('\nSaving model weights at iteration: {}'.format(
-                current_iter))
-            keras_model.save_weights(
-                filepath=checkpoint_dir + 'weights.h5', overwrite=True)
+    # Get historical values for the champion metric
+    metric_values = metrics_tracker.get_metrics_by_name(
+        metrics_tracker.champion_metric_name)
+
+    # Save weights from the current iteration if performance is best yet
+    current_iter = len(metric_values) - 1
+    if current_iter == metrics_tracker.champion_metric_iter:
+        print('\nSaving model weights at iteration: {}'.format(current_iter))
+        keras_model.save_weights(
+            filepath=checkpoint_dir + 'weights.h5', overwrite=True)
 
 def load_and_test_model_from_checkpoint(checkpoint,
                                         test_dataset,
@@ -100,7 +106,7 @@ def load_and_test_model_from_checkpoint(checkpoint,
                                         stacked_lstm=False,
                                         rnn_units_2=None):
 
-    # initalized weights will be replaced with weights from checkpoint
+    # Initalized weights will be replaced with weights from checkpoint
     keras_model = model.build_model(extended_vocab_size=extended_vocab_size,
                                     embedding_dim=embedding_dim,
                                     embedding_matrix='uniform',
