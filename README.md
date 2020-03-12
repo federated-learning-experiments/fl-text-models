@@ -2,10 +2,19 @@
 Federated learning with text DNNs for DATA 591 at University of Washington.  See the `README.md` file in **`final_research_report`** for an overview of our experiment designs and results.
 
 ##### Data
-The main dataset used for these experiments is hosted by Kaggle and made available through the [tff.simulation.datasets module in the Tensorflow Federated API](https://www.tensorflow.org/federated/api_docs/python/tff/simulation/datasets/stackoverflow/load_data).  Stack Overflow owns the data and has released the data under the [CC BY-SA 3.0 license](https://creativecommons.org/licenses/by-sa/3.0/).
+The main dataset used for these experiments is hosted by Kaggle and made available through the [tff.simulation.datasets module]((https://www.tensorflow.org/federated/api_docs/python/tff/simulation/datasets/stackoverflow/load_data)) in the [Tensorflow Federated API](https://github.com/tensorflow/federated).  Stack Overflow owns the data and has released the data under the [CC BY-SA 3.0 license](https://creativecommons.org/licenses/by-sa/3.0/).
 
 ##### Environment
 Experiments were conducted in a Python 3.7 conda environment with the packages in `requirements.txt` on both GPU and CPU VMs running Ubuntu 16.04.
+
+##### Running Experiments
+To conduct experiments with our code:
+
+- Clone the repository and replicate our conda environment.
+- Configure the `params.json` file to set a simulated client data sampling strategy, pretraining approach, and federated model architecture.
+- Execute `federated_nwp.py` to train a federated text model on Stack Overflow for next word prediction according to the desired parameters.  This script applies our methods described in `final_research_report/README.md` and is based on work from the research section of the [Tensorflow Federated API](https://github.com/tensorflow/federated).
+- Model weights, train and validation statistics, plots, and client sample metadata are automatically stored in the `experiment_runs` directory.  Run `experiment_runs/training_progress.py` to summarize model performance during or after training.
+- See the `notebooks` directory for additional analysis, experiments, and examples of loading, testing, and comparing trained models.
 
 ##### References
 This project draws mainly from the following research, but other sources are referenced throughout this repository, particularly code snippets.  Special thanks to Keith Rush and Peter Kairouz from Google for their guidance throughout the course of this project.  
