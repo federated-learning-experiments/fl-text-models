@@ -61,9 +61,7 @@ To pretrain our federated model, we first load, preprocess, and fit a model to t
 
 Starting with randomly initialized word embeddings and pretraining our small network on Shakespeare with fine tuning on Stack Overflow yields the following results:
 
-Results here.
-
-Discussion here.
+Results to be placed here.
 
 ### Pretrained Word Embeddings for Federated Training
 Using pretrained word embeddings to introduce information about word co-occurence into a model is a common method for reducing training time and increasing predictive accuracy (see [pretrained word embeddings in Keras](https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html)).  We hypothesize that having a common, starting representation for words across federated (non-IID) datasets yields improved model performance with fewer training rounds compared to federated training with randomly initialized word embeddings.  To test this, we consider a variety of pretrained word embeddings including [GloVe](https://nlp.stanford.edu/pubs/glove.pdf), [FastText](https://arxiv.org/abs/1712.09405), and [GPT2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) for both our small and large network architectures.  These methods of pretraining word embeddings vary in implementation (see the papers for each), capturing different information about how words co-occur.  In practice each embedding method exposes a preselected vocabulary with vector representations for each word, and can thus be compared on the basis of how these vector representations enable various downstream tasks.  For the present task of next word prediction, we expect the GPT2 embeddings, trained in an autoregressive fashion for next word prediction, to encode especially relevant information for our task at hand of predicting the next word in Stack Overflow posts.  We retrieve GPT2 embeddings from the [HuggingFace Transformers Library](https://arxiv.org/abs/1910.03771).
@@ -104,7 +102,7 @@ We highlight the large network GPT2 word embeddings (denoted **) with reduced di
 
 ### Federated Fine Tuning Using a Pretrained Model with Pretrained Word Embeddings
 
-As both model pretraining and starting with pretrained word embeddings provide ways of kicking off federated training with more intelligent models, it's natural to combine the two approaches.  In doing so we observed that even with the best of our word embedding approaches, the pretrained model performed worse than starting with federated training using both random and pretrained embeddings.
+As both model pretraining and starting with pretrained word embeddings provide ways of kicking off federated training with more intelligent models, it's natural to combine the two approaches.  In doing so we observed that even with the best of our word embedding approaches, the pretrained model (50 pretraining rounds with 800 rounds of fine-tuning) performed worse than starting with federated training using both random and pretrained embeddings.
 
 <img src="images/sp_large_pretrained.png" alt="drawing" width=800/>
 
