@@ -1,7 +1,7 @@
 # Final Research Report
 ##### DATA 591 at University of Washington in Collaboration with Google
 
-- 03-11-2020
+- 03-13-2020
 - [Arjun Singh\*](https://github.com/sinarj), [Joel Stremmel\*](https://github.com/jstremme)
 - Special thanks to Keith Rush and Peter Kairouz from Google for their guidance throughout the course of this project.
 
@@ -45,7 +45,7 @@ In this study, we train a variety of small and large neural networks with four l
 
 The output layer represents the top 10,000 most frequently occuring vocab words in the Stack Overflow dataset plus four special tokens used during traing denoting: padding, beginning of a sentence, end of a sentence, and out of vocabulary.  We report accuracy with and without these tokens included.
 
-We train both networks using the Adam optimizer and Sparse Categorical Crossentropy loss for batches of size 16 and compare train and validation accuracy at each training round for 800 training rounds by sampling 10 non-IID client datasets per round.  Each client dataset has 5,000 text samples from Stack Overflow at maximum, and a total of 20,000 validation samples.  Model parameters are averaged centrally after each federated training round and the contribution of each client dataset to the Sparse Categorical Crossentropy loss function is weighted by the number of text samples drawn from each client.  See the distribution of the number of text samples taken over 800 training rounds from one of our experiments below:
+We train both networks using the Adam optimizer and Sparse Categorical Crossentropy loss for batches of size 16 and compare train and validation accuracy at each training round for 800 training rounds by sampling 10 non-IID client datasets per round, though we run some initial tests with 500 training rounds and a final test with 1,500.  Each client dataset has 5,000 text samples from Stack Overflow at maximum, and a total of 20,000 validation samples.  Model parameters are averaged centrally after each federated training round and the contribution of each client dataset to the Sparse Categorical Crossentropy loss function is weighted by the number of text samples drawn from each client.  See the distribution of the number of text samples taken over 800 training rounds from one of our experiments below:
 
 <img src="images/large_random_train_distribution.png" alt="drawing" width="600"/>
 
@@ -53,7 +53,7 @@ While training each network, we save the model weights from the training round t
 
 <img src="images/model_architecture.png" alt="drawing"/>
 
-### Central Pretraining with Federated Fine Tuning
+### Central Pretraining with Federated Fine-Tuning
 
 The communication and computation costs of training models across distributed devices necessitates limiting the number of federated training rounds as much as possible.  Transfer learning provides a way to trade computation time on independent devices for computation time on a central server.  In this way, we propose that by initializing weights for a model to be trained on federated, private data with pretrained weights learned from centralized, public data, it is possible to limit training rounds on distributed devices, as the federated model will begin training with some information about autoregressive word order.  We recognize that the English in Shakespeare differs greatly from the English in Stack Overflow posts, and therefore submit that the value of our work is mostly mechanical in nature, that is, we provide a simple method to extract weights learned from a centrally trained model and apply them to a model to be trained in the federated setting.
 
@@ -61,15 +61,15 @@ To pretrain our federated model, we first load, preprocess, and fit a model to t
 
 Starting with randomly initialized word embeddings and pretraining our small network on Shakespeare with fine tuning on Stack Overflow yields the following results:
 
-<img src="images/pretrainFL.png" alt="drawing"/>
+<img src="images/pretrainFL.png" alt="drawing" width=800/>
 
-As can be seen from the graph above, there are 3 different models that were fine-tuned in federated style for 500 rounds. Although the model network remains the same for all 3, the key difference is whether they were pretrained.
+As can be seen from the graph above, there are three different models that were fine-tuned in the federated style for 500 rounds. Although the network remains the same for all three, the key difference is whether they were pretrained.
 
-The two learning curves that correspond to the case without any pretraining exhibit the lowest levels of train and validation accuracy. The curves displaying the learning for the model which was pretrained centrally using Shakespeare gets a marginal lift and here we witness some benefit of pretraining.
+The two learning curves that correspond to the case without any pretraining exhibit the lowest levels of train and validation accuracy. The curves displaying the learning for the model which was pretrained centrally using Shakespeare gets a marginal lift, and here we witness some benefit of pretraining for 50 rounds.
 
-Finally the curves with the highest accuracy, correspond to the ones which were pretrained using Stackoverflow data. However, there is hardly any benefit of fine-tuning here, because the accuracy is consistent between the first few epochs as well as the last few epochs of training.
+Finally the curves with the highest accuracy, correspond to the ones which were pretrained using separate IDs from the Stack Overflow data. However, there is hardly any benefit of fine-tuning here, because the accuracy is consistent between the first few epochs as well as the last few epochs of training.
 
-The two main takeaways from this experiment are the pretraining does generally improve the performance of fine-tuning, but when the source of data is identical for pretraining and fine-tuning, then fine-tuning doesn't add any value.
+The two main takeaways from this experiment are that pretraining generally improves the performance of fine-tuning, but when the source of data is identical for pretraining and fine-tuning, fine-tuning adds no value, and may not be practical in the real world unless data nearly identical to that in production is available.
 
 ### Pretrained Word Embeddings for Federated Training
 Using pretrained word embeddings to introduce information about word co-occurence into a model is a common method for reducing training time and increasing predictive accuracy (see [pretrained word embeddings in Keras](https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html)).  We hypothesize that having a common, starting representation for words across federated (non-IID) datasets yields improved model performance with fewer training rounds compared to federated training with randomly initialized word embeddings.  To test this, we consider a variety of pretrained word embeddings including [GloVe](https://nlp.stanford.edu/pubs/glove.pdf), [FastText](https://arxiv.org/abs/1712.09405), and [GPT2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) for both our small and large network architectures.  These methods of pretraining word embeddings vary in implementation (see the papers for each), capturing different information about how words co-occur.  In practice each embedding method exposes a preselected vocabulary with vector representations for each word, and can thus be compared on the basis of how these vector representations enable various downstream tasks.  For the present task of next word prediction, we expect the GPT2 embeddings, trained in an autoregressive fashion for next word prediction, to encode especially relevant information for our task at hand of predicting the next word in Stack Overflow posts.  We retrieve GPT2 embeddings from the [HuggingFace Transformers Library](https://arxiv.org/abs/1910.03771).
@@ -108,7 +108,7 @@ Comparing the models trained with these word embeddings on the test set with 1 m
 
 We highlight the large network GPT2 word embeddings (denoted **) with reduced dimension via the dimensionality reduction algorithm as the best performing approach in terms of accuracy, both with and without end of sentence and out of vocab tokens.
 
-### Federated Fine Tuning Using a Pretrained Model with Pretrained Word Embeddings
+### Federated Fine-Tuning Using a Pretrained Model with Pretrained Word Embeddings
 
 As both model pretraining and starting with pretrained word embeddings provide ways of kicking off federated training with more intelligent models, it's natural to combine the two approaches.  In doing so we observed that even with the best of our word embedding approaches, the pretrained model (50 pretraining rounds with 800 rounds of fine-tuning) performed worse than starting with federated training using both random and pretrained embeddings.
 
