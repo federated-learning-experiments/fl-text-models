@@ -61,7 +61,15 @@ To pretrain our federated model, we first load, preprocess, and fit a model to t
 
 Starting with randomly initialized word embeddings and pretraining our small network on Shakespeare with fine tuning on Stack Overflow yields the following results:
 
-Results to be placed here.
+<img src="images/pretrainFL.png" alt="drawing"/>
+
+As can be seen from the graph above, there are 3 different models that were fine-tuned in federated style for 500 rounds. Although the model network remains the same for all 3, the key difference is whether they were pretrained.
+
+The two learning curves that correspond to the case without any pretraining exhibit the lowest levels of train and validation accuracy. The curves displaying the learning for the model which was pretrained centrally using Shakespeare gets a marginal lift and here we witness some benefit of pretraining.
+
+Finally the curves with the highest accuracy, correspond to the ones which were pretrained using Stackoverflow data. However, there is hardly any benefit of fine-tuning here, because the accuracy is consistent between the first few epochs as well as the last few epochs of training.
+
+The two main takeaways from this experiment are the pretraining does generally improve the performance of fine-tuning, but when the source of data is identical for pretraining and fine-tuning, then fine-tuning doesn't add any value.
 
 ### Pretrained Word Embeddings for Federated Training
 Using pretrained word embeddings to introduce information about word co-occurence into a model is a common method for reducing training time and increasing predictive accuracy (see [pretrained word embeddings in Keras](https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html)).  We hypothesize that having a common, starting representation for words across federated (non-IID) datasets yields improved model performance with fewer training rounds compared to federated training with randomly initialized word embeddings.  To test this, we consider a variety of pretrained word embeddings including [GloVe](https://nlp.stanford.edu/pubs/glove.pdf), [FastText](https://arxiv.org/abs/1712.09405), and [GPT2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) for both our small and large network architectures.  These methods of pretraining word embeddings vary in implementation (see the papers for each), capturing different information about how words co-occur.  In practice each embedding method exposes a preselected vocabulary with vector representations for each word, and can thus be compared on the basis of how these vector representations enable various downstream tasks.  For the present task of next word prediction, we expect the GPT2 embeddings, trained in an autoregressive fashion for next word prediction, to encode especially relevant information for our task at hand of predicting the next word in Stack Overflow posts.  We retrieve GPT2 embeddings from the [HuggingFace Transformers Library](https://arxiv.org/abs/1910.03771).
