@@ -33,7 +33,7 @@ Therefore, in our experiments, we limit the vocab size to exclude very rare word
 
 <img src="images/word_occurences.png" alt="drawing"/>
 
-For the task of model pretraining, we also leverage the collected works of Shakespeare from Project Gutenberg released under the [Project Gutenberg license](https://www.gutenberg.org/wiki/Gutenberg:The_Project_Gutenberg_License).  We download the full text of these collected works totaling 124,788 lines from [this url]('http://www.gutenberg.org/files/100/old/1994-01-100.zip').
+For the task of model pretraining, we also leverage the collected works of Shakespeare from Project Gutenberg released under the [Project Gutenberg license](https://www.gutenberg.org/wiki/Gutenberg:The_Project_Gutenberg_License).  We download the full text of these collected works totaling 124,788 lines from [this url](http://www.gutenberg.org/files/100/old/1994-01-100.zip).
 
 ### Model Design
 In this study, we train a variety of small and large neural networks with four layers each as follows:
