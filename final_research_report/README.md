@@ -15,10 +15,10 @@ Federated learning trains machine learning models in a distributed fashion witho
 2. Incorporating pretrained word embeddings instead of randomly initialized embeddings and fine-tuning these embeddings while training the full network in the federated setting.
 3. Combining centralized pretraining and pretrained word embeddings with federated fine-tuning.
 
-The following sections detail the methods we apply to achieve these enhancements as well as our experimental results.  All code for this research is freely available under the MIT License [at this address](https://github.com/federated-learning-experiments/fl-text-models).
+The following sections detail the methods we apply to achieve these enhancements as well as our experimental results.  All code for this research is freely available under the MIT license [at this address](https://github.com/federated-learning-experiments/fl-text-models).
 
 ### Data
-The main dataset used for these experiments is hosted by Kaggle and made available through the [tff.simulation.datasets module](https://www.tensorflow.org/federated/api_docs/python/tff/simulation/datasets/stackoverflow/load_data) in the [Tensorflow Federated API](https://github.com/tensorflow/federated).  Stack Overflow owns the data and has released the data under the [CC BY-SA 3.0 license](https://creativecommons.org/licenses/by-sa/3.0/).  The Stack Overflow data contains the full body text of all Stack Overflow questions and answers along with metadata, and the API pointer is updated quarterly.  The data is split into the following sets at the time of writing:
+The main dataset used for these experiments is hosted by Kaggle and made available through the [tff.simulation.datasets module](https://www.tensorflow.org/federated/api_docs/python/tff/simulation/datasets/stackoverflow/load_data) in the Tensorflow Federated API [[2]](https://github.com/tensorflow/federated).  Stack Overflow owns the data and has released the data under the [CC BY-SA 3.0 license](https://creativecommons.org/licenses/by-sa/3.0/).  The Stack Overflow data contains the full body text of all Stack Overflow questions and answers along with metadata, and the API pointer is updated quarterly.  The data is split into the following sets at the time of writing:
 
 - Train: 342,477 distinct users and 135,818,730 examples.
 - Validation: 38,758 distinct users and 16,491,230 examples.
@@ -40,8 +40,8 @@ In this study, we train a variety of small and large neural networks with four l
 
 |Size | Embedding Size | LSTM Size                | Dense Layer | Output Layer |
 |-----|----------------|--------------------------|-------------|--------------|
-|Small| 100            | 256                      | 100         | 10004        |
-|Large| 300            | 512                      | 300         | 10004        |
+|Small| 100            | 256                      | 100         | 10,004        |
+|Large| 300            | 512                      | 300         | 10,004        |
 
 The output layer represents the top 10,000 most frequently occuring vocab words in the Stack Overflow dataset plus four special tokens used during training denoting: padding, beginning of a sentence, end of a sentence, and out of vocabulary.  We report accuracy with and without these tokens included.
 
@@ -85,11 +85,11 @@ Raunak et al. provide an example of how further post-processing eliminates the d
 
 <img src="images/algo1_var.png" alt="drawing" width="400"/>
 
-And then again after applying the dimensionality reduction aglorithm with a PCA transformation to 150 dimensions and another round of post-processing.
+And then again after applying dimensionality reduction with a PCA transformation to 150 dimensions and another round of post-processing.  This eliminates the dominating effects of the new top principal components, making the reduced word vectors more discriminative.
 
 <img src="images/algo2_var.png" alt="drawing" width="400"/>
 
-We apply the demonsionality reduction algorithm from Raunak et al. to create word embeddings used for federated next word prediction with the aforementioned model architectures and achieve the following validation set accuracy over 800 training rounds where "PP PCA PP" denotes algorithm two (in which post-processing is applied before and after PCA) and D=7 (as in Raunak et al. but also based on plotting variance explained for our word vectors).  Note here that we plot validation accuracy from many runs where validation accuracy includes end of sentence and out of vocab tokens.  The test accuracy without these tokens included is reported in a table to follow.  See first the small network validation set accuracy across a variety of word embedding representations:
+We apply the Demonsionality Reduction Algorithm from [[8]](https://www.aclweb.org/anthology/W19-4328.pdf) to create word embeddings used for federated next word prediction with the aforementioned model architectures and achieve the following validation set accuracy over 800 training rounds where "PP PCA PP" denotes algorithm two (in which post-processing is applied before and after PCA) and D=7 (as in [[8]](https://www.aclweb.org/anthology/W19-4328.pdf) but also based on plotting variance explained for our word vectors).  Here accuracy includes end of sentence and out of vocab tokens.  The test accuracy without these tokens included is reported in a table to follow.  See first the small network validation accuracy across a variety of word embedding representations:
 
 <img src="images/small_val_acc.png" alt="drawing" width=800/>
 
@@ -115,7 +115,7 @@ As both model pretraining and starting with pretrained word embeddings provide w
 We suspect that while pretraining with Shakespeare is effective for the small network, using a model with increased capacity renders this prior information useless, as the nature of Shakespearean English is quite different from that of Stack Overflow.  In this way we think that a dataset more similar to Stack Overlow may yield increased performance for full model pretraining. 
 
 ### Comparison to "Adapative Federated Averaging" Stack Overflow Baseline
-Our pretraining experiments fixed the client sampling strategy and model architecure as described earlier, though to demonstrate robustness, we explore whether or not the successes we observe with pretraining, particularly using pretrained word embeddings with the Dimensionality Reduction Algorithm, will still hold with a different federated client sampling strategy and different model architecure.  In [[10]](https://arxiv.org/pdf/2003.00295.pdf), Reddi et al. sample 50 clients per training round with a max of only 128 text samples instead of 5,000 as in our experiments.  They also use an embedding dimension of size 96 with an LSTM layer of size 670, feeding to two dense layers of size 96 and 10,004 respectively.  With this sampling strategy and model architecture, we compare randomly initialized word embeddings to our best performing pretrained word embeddings: GPT2 with dimensionality reduction as in [[8]](https://www.aclweb.org/anthology/W19-4328.pdf). 
+Our pretraining experiments fixed the client sample size and model architecure as described earlier, though to demonstrate robustness, we explore whether or not the successes we observe with pretraining, particularly using pretrained word embeddings with the Dimensionality Reduction Algorithm, will still hold with a different federated client sample size and model architecure.  In [[10]](https://arxiv.org/pdf/2003.00295.pdf), Reddi et al. sample 50 clients per training round with a max of only 128 text samples instead of 5,000 as in our experiments.  They also use an embedding dimension of size 96 with an LSTM layer of size 670, feeding to two dense layers of size 96 and 10,004 respectively.  With this approach we compare randomly initialized word embeddings to our best performing pretrained word embeddings: GPT2 with dimensionality reduction as in [[8]](https://www.aclweb.org/anthology/W19-4328.pdf). 
 
 <img src="images/adptv_fed_opt_baseline_val_curves.png" alt="drawing" width=800/>
 
