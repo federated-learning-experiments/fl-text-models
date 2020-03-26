@@ -56,30 +56,30 @@ While training each network, we save the model weights from the training round t
 ### Central Pretraining with Federated Fine-Tuning
 The communication and computation costs of training models across distributed devices necessitates limiting the number of federated training rounds as much as possible.  Transfer learning provides a way to trade computation time on independent devices for computation time on a central server.  In this way, we propose that by initializing weights for a model to be trained on federated, private data with pretrained weights learned from centralized, public data, it is possible to limit training rounds on distributed devices, as the federated model will begin training with some information about the sequence of words, i.e., which word should follow the text observed so far.  We recognize that the English in Shakespeare differs greatly from the English in Stack Overflow posts, and therefore submit that the value of our work is mostly mechanical in nature, that is, we provide a simple method to extract weights learned from a centrally trained model and apply them to a model to be trained in the federated setting.
 
-To centrally pretrain our federated model, we first load, preprocess, and fit a model to a pretraining dataset using the [tf.keras](https://www.tensorflow.org/api_docs/python/tf/keras) module from Tensorflow.  In doing so, we fit the same model architecture as described above for federated training but to the entire dataset for a predefined number of pretraining rounds.  We then extract the tensors of model weights from the trained model and use these layer tensors to initialize the federated model. This pretrained dataset alludes to either the Shakespeare data, or to the Stackoverflow dataset, which also gets used in the federated fine-tuning process. The key thing to note here is that we end up using distinct data samples for pretraining and fine-tuning to ensure that our pretrained model isn't unintentionally overfit. The function to get the Stackoverflow federated data allows us to split it into train, val and test datasets. Following this paradigm, it is trivial to also derive another disjoint subset of the source data, solely for pretraining.
+To centrally pretrain our federated model, we first load, preprocess, and fit a model to a pretraining dataset using the [tf.keras](https://www.tensorflow.org/api_docs/python/tf/keras) module from Tensorflow.  In doing so, we fit the same model architecture as described above for federated training but to the entire dataset for a predefined number of pretraining rounds.  We then extract the tensors of model weights from the trained model and use these layer tensors to initialize the federated model. In the results to follow we pretrain either on Shakespeare or Stack Overflow.  
 
+For Stack Overflow, we use distinct samples for pretraining and fine-tuning to avoid overfitting and derive these samples from the train, validation, and test sets from the Tensorflow Federated [datasets API](https://www.tensorflow.org/federated/api_docs/python/tff/simulation/datasets/stackoverflow/load_data), pretraining on the test set and reporting validation set performance during fine-tuning on the train set.  Words that do not map to embeddings learned during pretraining are initialized by drawing floating points from the random uniform distribution on the interval [-0.05, 0.05].  We apply this same method of filling in missing words when using pretrained word embeddings for federated training on Stack Overflow which we describe in the next section.
 
-For the embedding layer, we use one of the methods described in the following section on word embeddings which include either random or pretrained embeddings.  Words in the Shakespeare dataset that do not map to pretrained word embeddings are initialized by drawing floating points from the random uniform distribution on the interval [-0.05, 0.05].  We apply this same method of filling in missing words when using pretrained word embeddings for federated training on Stack Overflow which we describe in the next section.
-
-Starting with randomly initialized word embeddings and pretraining our small network on Shakespeare with fine tuning on Stack Overflow yields the following results:
+Starting with randomly initialized word embeddings and pretraining our small network as described above with fine-tuning on Stack Overflow yields the following results:
 
 <img src="images/pretrainFL.png" alt="drawing" width=800/>
 
 As can be seen from the graph above, there are three different models that were fine-tuned in the federated style for 500 rounds. Although the network remains the same for all three, the key difference is whether they were pretrained. The three models are as follows:
-1. Federated training on Stackoverflow data without any pretraining
-2. Central pretraining on Shakespeare data followed by federated fine-tuning on Stackoverflow data
-3. Central pretraining on a subset of the Stackoverflow dataset followed by federated fine-tuning on a distinct subset of the Stackoverflow dataset.
 
-#### 1. Federated training on Stackoverflow data without any pretraining
+**1. Federated training on Stack Overflow without any pretraining**
+
 The two learning curves that correspond to the case without any pretraining exhibit the lowest levels of train and validation accuracy. 
 
-#### 2. Central pretraining on Shakespeare data followed by federated fine-tuning on Stackoverflow data
-The curves displaying the learning for the model which was pretrained centrally using Shakespeare gets a marginal lift, and here we witness some benefit of pretraining for 50 rounds.
+**2. Central pretraining on Shakespeare followed by federated fine-tuning on Stack Overflow**
 
-#### 3. Central pretraining on a subset of the Stackoverflow dataset followed by federated fine-tuning on a distinct subset of the Stackoverflow dataset.
-Finally the curves with the highest accuracy, correspond to the ones which were pretrained using separate IDs from the Stack Overflow data. However, there is hardly any benefit of fine-tuning here, because the accuracy is consistent between the first few epochs as well as the last few epochs of training.
+The curves for the model pretrained centrally using Shakespeare get a marginal lift.  Here we witness some benefit of pretraining for 50 rounds.
+
+**3. Central pretraining on a subset of Stack Overflow followed by federated fine-tuning on a distinct subset of Stack Overflow**
+
+The curves with the highest accuracy, correspond to the ones which were pretrained using separate IDs from the Stack Overflow data. However, there is hardly any benefit of fine-tuning here, because the accuracy is consistent between the first few epochs as well as the last few epochs of training.
 
 The two main takeaways from this experiment are as follows:
+
 1. Pretraining generally improves the performance of fine-tuning.
 2. When the source of data is identical for pretraining and fine-tuning, fine-tuning adds no value. 
 
