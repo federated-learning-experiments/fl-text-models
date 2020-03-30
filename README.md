@@ -16,6 +16,16 @@ To conduct experiments with our code:
 - Model weights, train and validation statistics, plots, and client sample metadata are automatically stored in the `experiment_runs` directory.  Run `experiment_runs/training_progress.py` to summarize model performance during or after training.
 - See the `notebooks` directory for additional analysis, experiments, and examples of loading, testing, and comparing trained models.
 
+**Example Setup and Execution**
+```
+git clone https://github.com/federated-learning-experiments/fl-text-models.git
+conda create --verbose --yes --name tff python=3.7
+conda activate tff
+pip install -r requirements.txt
+python federated_nwp.py
+```
+For the matplotlib dependency, you may need to apply the fix recommended [here](https://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python).
+
 ##### References
 This project draws mainly from the following research, but other sources are referenced throughout this repository, particularly code snippets.  Special thanks to Keith Rush and Peter Kairouz from Google for their guidance throughout the course of this project.  
 
