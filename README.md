@@ -24,7 +24,7 @@ conda activate tff
 pip install -r requirements.txt
 python federated_nwp.py
 ```
-For the matplotlib dependency, you may need to apply the fix recommended [here](https://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python) if Python is not recognized as a framework.
+Due to the matplotlib dependency, you may need to apply the fix recommended [here](https://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python), if Python is not recognized as a framework.
 
 ##### References
 This project draws mainly from the following research, but other sources are referenced throughout this repository, particularly code snippets.  Special thanks to Keith Rush and Peter Kairouz from Google for their guidance throughout the course of this project.  
