@@ -31,7 +31,7 @@ The [EDA notebook linked here](https://github.com/federated-learning-experiments
 
 Therefore, in our experiments, we limit the vocab size to exclude very rare words, accepting that even state of the art language models fail at next word prediction when the next word is rare.  Note the distribution below for the log of the number of word occurrences:
 
-<img src="images/word_occurrences.png" alt="drawing"/>
+<img src="images/word_occurrences.png" alt="drawing" width=400/>
 
 For the task of model pretraining, we also leverage the collected works of Shakespeare from Project Gutenberg released under the [Project Gutenberg license](https://www.gutenberg.org/wiki/Gutenberg:The_Project_Gutenberg_License).  We download the full text of these collected works totaling 124,788 lines from [this url](http://www.gutenberg.org/files/100/old/1994-01-100.zip).
 
