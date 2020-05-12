@@ -4,6 +4,7 @@
 - 03-13-2020
 - [Arjun Singh\*](https://github.com/sinarj), [Joel Stremmel\*](https://github.com/jstremme)
 - Special thanks to Peter Kairouz and Keith Rush from Google for their guidance throughout the course of this project.
+- See our [white paper](https://arxiv.org/abs/2005.04828) for further details on related work, experiment designs, and results.
 
 ### Introduction
 Machine learning on big data is an extremely popular and useful field of research and development. However, there are a variety of limitations to centrally aggregating data, such as compromising user privacy and the maintenance of often expensive hardware and compute resources. Federated learning aims to address this and has exhibited promising results for text completion tasks on mobile devices [[3]](https://arxiv.org/pdf/1811.03604.pdf). The [Tensorflow Federated API](https://github.com/tensorflow/federated) [[2]](https://arxiv.org/pdf/1902.01046.pdf) provides methods to train federated models and conduct federated learning experiments on data grouped by clients but never aggregated. Through our research partnership with the Tensorflow Federated team at Google, we build on the existing body of federated learning experiments, focusing on enhancing the accuracy and reducing the size and training time constraints of federated text models for next word prediction.
