@@ -1,5 +1,5 @@
 # fl-text-models
-In this project we pretrain federated text models for next word prediction.  See our [white paper](https://arxiv.org/abs/2005.04828) for details on related work, experiment designs, and results.
+In this project we pretrain federated text models for next word prediction.  See our [white paper](https://arxiv.org/abs/2005.04828) for details on related work, experiment designs, and results, or check out the [video](https://www.youtube.com/watch?v=hp6XJeAHUBo) below for an overview of our research.
 
 [![Video](https://img.youtube.com/vi/hp6XJeAHUBo/0.jpg)](https://www.youtube.com/watch?v=hp6XJeAHUBo)
 
