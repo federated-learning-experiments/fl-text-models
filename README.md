@@ -1,6 +1,8 @@
 # fl-text-models
 In this project we pretrain federated text models for next word prediction.  See our [white paper](https://arxiv.org/abs/2005.04828) for details on related work, experiment designs, and results.
 
+[![Video](https://img.youtube.com/vi/hp6XJeAHUBo/0.jpg)](https://www.youtube.com/watch?v=hp6XJeAHUBo)
+
 ##### Data
 The main dataset used for these experiments is hosted by Kaggle and made available through the [tff.simulation.datasets module]((https://www.tensorflow.org/federated/api_docs/python/tff/simulation/datasets/stackoverflow/load_data)) in the [Tensorflow Federated API](https://github.com/tensorflow/federated).  Stack Overflow owns the data and has released the data under the [CC BY-SA 3.0 license](https://creativecommons.org/licenses/by-sa/3.0/).
 
